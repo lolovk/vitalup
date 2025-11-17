@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>VitalUp.me - Tu salud en progreso</title>
+  
+  <!-- Tailwind CSS -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  
+  <!-- App modules -->
+  <script defer src="app.js?v=20241117-005"></script>
+  <script defer src="storage.js?v=20241117-009"></script>
+  <script defer src="views/dashboard.js?v=20241116-014"></script>
+  <script defer src="views/quick-entry.js?v=20241117-024"></script>
+  <script defer src="views/registros.js?v=20241117-009"></script>
+  <script defer src="views/estadisticas.js?v=20241116-014"></script>
+  <script defer src="views/config.js?v=20241117-003"></script>
+  
+  <!-- DEMO DATA (OPCIONAL): Descomentar la siguiente línea para cargar datos de ejemplo -->
+  <!--   <script defer src="demo-data.js"></script> -->
+  
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; }
+    
+    /* Animaciones suaves */
+    .fade-in { animation: fadeIn 0.2s ease-in; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    /* Input number sin flechas */
+    input[type=number]::-webkit-inner-spin-button,
+    input[type=number]::-webkit-outer-spin-button {
+      -webkit-appearance: none;
+      margin: 0;
+    }
+    input[type=number] { -moz-appearance: textfield; }
+    
+    /* Focus states mejorados */
+    input:focus, select:focus, textarea:focus {
+      outline: 2px solid #3b82f6;
+      outline-offset: 2px;
+    }
+    
+    /* Scrollbar personalizado */
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #f1f1f1; }
+    ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900">
+  
+  <!-- Header fijo -->
+  <header class="bg-white border-b border-gray-200 sticky top-0 z-40 shadow-sm">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex items-center justify-between h-16">
+        <!-- Logo -->
+        <a href="#/dashboard" class="flex items-center gap-3 hover:opacity-80 transition cursor-pointer">
+          <i class="fas fa-chart-line text-2xl text-blue-600"></i>
+          <h1 class="text-xl font-bold">VitalUp.me</h1>
+        </a>
+        
+        <!-- Navigation -->
+        <nav class="hidden md:flex gap-6">
+          <a href="#/dashboard" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition">
+            <i class="fas fa-home"></i>
+            <span>Dashboard</span>
+          </a>
+          <a href="#/registros" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition">
+            <i class="fas fa-list-alt"></i>
+            <span>Registros</span>
+          </a>
+          <a href="#/estadisticas" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition">
+            <i class="fas fa-chart-bar"></i>
+            <span>Estadísticas</span>
+          </a>
+          <a href="#/config" class="nav-link flex items-center gap-2 px-3 py-2 rounded-lg hover:bg-gray-100 transition">
+            <i class="fas fa-cog"></i>
+            <span>Config</span>
+          </a>
+        </nav>
+        
+        <!-- Mobile menu button -->
+        <button id="mobileMenuBtn" class="md:hidden p-2 rounded-lg hover:bg-gray-100">
+          <i class="fas fa-bars text-xl"></i>
+        </button>
+      </div>
+    </div>
+    
+    <!-- Mobile menu -->
+    <div id="mobileMenu" class="hidden md:hidden border-t border-gray-200 bg-white">
+      <nav class="px-4 py-3 space-y-2">
+        <a href="#/dashboard" class="mobile-nav-link block px-3 py-2 rounded-lg hover:bg-gray-100">
+          <i class="fas fa-home mr-2"></i>Dashboard
+        </a>
+        <a href="#/registros" class="mobile-nav-link block px-3 py-2 rounded-lg hover:bg-gray-100">
+          <i class="fas fa-list-alt mr-2"></i>Registros
+        </a>
+        <a href="#/estadisticas" class="mobile-nav-link block px-3 py-2 rounded-lg hover:bg-gray-100">
+          <i class="fas fa-chart-bar mr-2"></i>Estadísticas
+        </a>
+        <a href="#/config" class="mobile-nav-link block px-3 py-2 rounded-lg hover:bg-gray-100">
+          <i class="fas fa-cog mr-2"></i>Configuración
+        </a>
+      </nav>
+    </div>
+  </header>
+  
+  <!-- Main content -->
+  <main id="app" class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6 min-h-screen">
+    <!-- Las vistas se cargan aquí -->
+  </main>
+  
+  <!-- FAB: Botón flotante para registro rápido -->
+  <button id="fabQuickEntry" 
+          class="fixed bottom-6 right-6 w-14 h-14 bg-blue-600 text-white rounded-full shadow-lg hover:bg-blue-700 transition flex items-center justify-center z-50">
+    <i class="fas fa-plus text-xl"></i>
+  </button>
+  
+  <!-- Modal para registro rápido/completo -->
+  <div id="modalEntry" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col">
+      <!-- Header del modal -->
+      <div class="px-6 py-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+        <h2 id="modalTitle" class="text-xl font-bold">Registro del día</h2>
+        <button onclick="closeModal()" class="p-2 hover:bg-white/20 rounded-lg transition">
+          <i class="fas fa-times text-xl"></i>
+        </button>
+      </div>
+
+      <!-- Contenido scrolleable -->
+      <div class="flex-1 overflow-y-auto px-6 py-6" id="modalContent">
+        <!-- Se inyecta desde quick-entry.js -->
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal para información personal inicial -->
+  <div id="modalPersonalInfo" class="hidden fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col">
+      <!-- Header del modal -->
+      <div class="px-6 py-4 border-b border-gray-200 bg-gradient-to-r from-green-600 to-green-700 text-white">
+        <div class="text-center">
+          <i class="fas fa-user-plus text-3xl mb-2"></i>
+          <h2 class="text-xl font-bold">¡Bienvenido a VitalUp.me!</h2>
+          <p class="text-sm opacity-90 mt-1">Configura tu información personal para comenzar</p>
+        </div>
+      </div>
+
+      <!-- Contenido scrolleable -->
+      <div class="flex-1 overflow-y-auto px-6 py-6">
+        <form id="personalInfoForm" class="space-y-6">
+          <!-- Información Personal -->
+          <div>
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <i class="fas fa-user text-green-600"></i>
+              Información Personal
+            </h3>
+
+            <div class="grid grid-cols-1 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Género</label>
+                <select name="genero" required class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent">
+                  <option value="">Selecciona tu género</option>
+                  <option value="masculino">Masculino</option>
+                  <option value="femenino">Femenino</option>
+                  <option value="otro">Otro</option>
+                </select>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Altura (cm)</label>
+                <input type="number" name="altura" min="120" max="250" step="0.1"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                       placeholder="Ej: 175">
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Peso inicial (kg)</label>
+                <input type="number" name="peso_inicial" min="30" max="300" step="0.1"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                       placeholder="Ej: 70.5">
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Perímetro abdominal inicial (cm)</label>
+                <input type="number" name="perimetro_inicial" min="50" max="200" step="0.1"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                       placeholder="Ej: 85.0">
+              </div>
+            </div>
+          </div>
+
+          <!-- Objetivos -->
+          <div class="border-t pt-6">
+            <h3 class="text-lg font-semibold text-gray-800 mb-4 flex items-center gap-2">
+              <i class="fas fa-target text-green-600"></i>
+              Objetivos
+            </h3>
+
+            <div class="grid grid-cols-1 gap-4">
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Peso objetivo (kg)</label>
+                <input type="number" name="peso_objetivo" min="30" max="300" step="0.1"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                       placeholder="Ej: 65.0">
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-gray-700 mb-2">Perímetro abdominal objetivo (cm)</label>
+                <input type="number" name="perimetro_objetivo" min="50" max="200" step="0.1"
+                       class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+                       placeholder="Ej: 75.0">
+              </div>
+            </div>
+          </div>
+
+          <!-- Botones -->
+          <div class="border-t pt-6 flex gap-3">
+            <button type="button" onclick="savePersonalInfo()"
+                    class="flex-1 bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 transition font-medium flex items-center justify-center gap-2">
+              <i class="fas fa-check"></i>
+              Guardar y continuar
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+  
+</body>
+</html>
