@@ -1,308 +1,179 @@
-# VitalUp.me
+# VitalUp.me 🏃‍♂️
 
-**Tu aplicación personal de seguimiento de salud y fitness**
+Aplicación web de seguimiento de salud y fitness personal, completamente del lado del cliente.
 
-Una herramienta web completa para monitorear tu progreso diario en nutrición, entrenamiento, mediciones corporales, sueño y bienestar general. Todo almacenado localmente en tu navegador.
+## 📋 Descripción
 
-🌐 **Demo live**: [vitalup.me](https://vitalup.me)
+VitalUp.me es una aplicación progresiva (PWA-ready) para el seguimiento diario de:
+- 🍽️ Nutrición (calorías, proteínas, comidas detalladas)
+- 💧 Hidratación
+- 🏋️ Entrenamiento y actividad física
+- 😴 Sueño y calidad de descanso
+- 😊 Estado de ánimo y energía
+- 📏 Mediciones corporales (peso, perímetro abdominal)
+- ⚠️ Excesos y consumos a evitar
 
----
+## 🚀 Características
 
-## 🚀 Inicio rápido
+- **100% Cliente**: Sin servidor, todos los datos se almacenan en localStorage
+- **Privacidad total**: Tus datos nunca salen de tu navegador
+- **Diseño responsive**: Optimizado para móvil y escritorio
+- **Sin dependencias**: Vanilla JavaScript puro
+- **Visualización de datos**: Gráficos con Chart.js
+- **Exportación/Importación**: Backup de datos en JSON
 
-### Primer uso (5 minutos)
+## 🛠️ Tecnologías
 
-1. **👤 Información personal inicial**: Al abrir la app, completa el modal de bienvenida con género, altura, peso inicial y objetivos
-2. **📱 Tu primer registro**: Haz clic en el botón flotante azul (+) y llena lo que quieras trackear
-3. **🎯 Elige tu enfoque**: Modo minimalista (30 seg/día) o detallado (3-5 min/día)
+- HTML5
+- Vanilla JavaScript (ES6+)
+- Tailwind CSS (vía CDN)
+- Chart.js para visualización de datos
+- Font Awesome para iconografía
+- localStorage API para persistencia
 
-### 🎯 Dos formas de usar VitalUp.me
+## 📁 Estructura del Proyecto
 
-#### **Modo Minimalista** ⚡
-*Para usuarios que quieren simplicidad*
-
-**Llena solo:**
-- ✅ Calorías totales del día
-- ✅ Proteínas totales del día
-- ✅ Checkbox "Hice entrenamiento"
-- ✅ Horas de sueño
-
-**Tiempo**: ~30 segundos por día
-
-#### **Modo Detallado** 🔬
-*Para usuarios que quieren control total*
-
-**Completa:**
-- 🍽️ **Comidas individuales** (tipo, hora, contenido, macros)
-- 🏋️ **Entrenamientos detallados** (tipo, duración, intensidad)
-- 📏 **Mediciones corporales** (peso, perímetro)
-- 😴 **Bienestar completo** (sueño, energía, ánimo)
-- 💊 **Suplementos y consumos negativos**
-
-**Tiempo**: 3-5 minutos por día
-
----
-
-## ✨ Características principales
-
-### 📊 **Dashboard inteligente**
-- Resumen del día actual con indicadores de progreso
-- Racha de días con registros completos
-- Estadísticas de la semana actual vs anterior
-- Alertas visuales para objetivos pendientes
-
-### 🍎 **Nutrición avanzada**
-- **Sistema de comidas flexible**: Añade todas las comidas que quieras
-- Cada comida incluye: tipo, hora, contenido, calorías y proteínas
-- **Contadores automáticos** de macros en tiempo real
-- Configuración personalizable de:
-  - Tipos de comida (Desayuno, Pre-entreno, Post-entreno, etc.)
-  - Suplementos habituales
-  - Consumos negativos a evitar
-
-### 🏋️ **Entrenamiento completo**
-- Registro de entrenamientos principales
-- Actividades de descanso activo
-- Múltiples tipos: Fuerza, Cardio, HIIT, Yoga, etc.
-- Duración, intensidad y notas personalizadas
-
-### 📏 **Mediciones corporales**
-- Peso y perímetro abdominal
-- Objetivos personalizables
-- Tracking de progreso visual
-- Comparativas históricas
-
-### 😴 **Sueño y bienestar**
-- Horas y calidad del sueño
-- Niveles de energía y ánimo (1-5)
-- Estado digestivo
-- Notas generales del día
-
-### 📋 **Gestión de registros**
-- **Tabla personalizable**: Elige qué columnas ver
-- Filtros inteligentes: rango de fechas, últimos días, solo entrenamientos
-- Búsqueda y ordenación
-- Edición y eliminación de registros
-
-### 📈 **Estadísticas visuales**
-- Gráficos interactivos con Chart.js
-- Trends de peso y perímetro abdominal
-- Evolución de calorías y proteínas
-- Patrones de sueño y energía
-- Análisis de períodos personalizables
-
-### ⚙️ **Configuración avanzada**
-- Objetivos personalizables (calorías, proteínas, peso)
-- Listas editables (suplementos, tipos de comida)
-- Preferencias de visualización
-- Export/Import completo de datos
-- Reset selectivo o total
-
----
-
-## 📊 Navegación y flujo de trabajo
-
-### **Dashboard** 🏠
-Tu punto de partida diario con resumen de progreso y acceso rápido a nuevo registro.
-
-### **Registros** 📋
-Tabla personalizable con todos tus datos. Usa el botón "Columnas" para mostrar solo lo relevante.
-
-**Filtros útiles:**
-- 📅 **Rango de fechas**: Período específico
-- ⚡ **Filtros rápidos**: 7/30/90 días
-- 💪 **Solo entrenamientos**: Días con actividad física
-
-### **Estadísticas** 📈
-Gráficos interactivos para identificar patrones y progreso en diferentes períodos.
-
-### **Configuración** ⚙️
-Personaliza objetivos, tipos de comida, suplementos y preferencias.
-
----
-
-## 🎯 Casos de uso
-
-### **Pérdida de peso**
-- **Focus**: Calorías diarias, peso, perímetro abdominal
-- **Tracking esencial**: Comidas principales + consumos negativos
-- **Métricas clave**: Déficit calórico, trends de peso
-
-### **Ganancia muscular**
-- **Focus**: Proteínas, entrenamientos de fuerza, suplementación
-- **Tracking esencial**: Comidas detalladas + sesiones de gym
-- **Métricas clave**: Proteína/kg peso, progresión cargas
-
-### **Bienestar general**
-- **Focus**: Balance nutrición-ejercicio-descanso
-- **Tracking esencial**: Energía, ánimo, calidad de sueño
-- **Métricas clave**: Consistencia, correlaciones lifestyle
-
----
-
-## 🔧 Personalización avanzada
-
-### **Tipos de comida personalizados**
 ```
-Desayuno, Pre-entreno, Post-entreno, Comida,
-Merienda, Cena, Snack nocturno
+public_html/
+├── index.html              # Punto de entrada, layout y navegación
+├── app.js                  # Router y utilidades globales
+├── storage.js              # Capa de persistencia (localStorage)
+├── demo-data.js            # Datos de ejemplo (opcional)
+└── views/
+    ├── dashboard.js        # Vista principal con resumen del día
+    ├── quick-entry.js      # Formulario de registro diario
+    ├── registros.js        # Tabla histórica de registros
+    ├── estadisticas.js     # Gráficos y análisis
+    └── config.js           # Configuración de la aplicación
 ```
 
-### **Consumos negativos configurables**
-```
-Alcohol, Dulces, Snacks procesados, Refrescos,
-Fast food, Frituras, Bollería
-```
+## 🚀 Instalación y Uso
 
-### **Columnas visibles en registros**
-```
-Fecha, Calorías, Proteínas, Entrenamiento,
-Consumos negativos, Sueño, Peso, Perímetro,
-Ánimo, Energía, Acciones
+### Desarrollo Local
+
+1. Clona el repositorio:
+```bash
+git clone https://github.com/lolovk/vitalup.git
+cd vitalup
 ```
 
----
+2. Sirve los archivos con cualquier servidor HTTP:
+```bash
+# Python 3
+python -m http.server 8000
 
-## ⚡ Tips de productividad
+# PHP
+php -S localhost:8000
 
-### **Atajos de teclado**
-- `Ctrl/Cmd + N`: Nuevo registro
-- `Esc`: Cerrar modal
-
-### **Flujo recomendado**
-1. **Mañana**: Registro del día anterior (más preciso)
-2. **Noche**: Ajustes finales del día actual
-3. **Domingo**: Revisar estadísticas semanales
-
-### **Configuración inicial sugerida**
-
-#### Tipos de comida útiles:
-```
-✅ Desayuno        ✅ Pre-entreno      ✅ Post-entreno
-✅ Comida          ✅ Merienda         ✅ Cena
+# Node.js (http-server)
+npx http-server
 ```
 
-#### Consumos negativos comunes:
-```
-❌ Alcohol         ❌ Dulces           ❌ Fast food
-❌ Refrescos       ❌ Snacks procesados ❌ Frituras
-```
+3. Abre en el navegador: `http://localhost:8000/public_html/`
 
----
+### Producción
 
-## 🛠️ Tecnología y privacidad
+Simplemente sube la carpeta `public_html/` a cualquier hosting estático:
+- GitHub Pages
+- Netlify
+- Vercel
+- Firebase Hosting
+- O cualquier servidor web tradicional
 
-### **Stack técnico**
-- **Frontend**: Vanilla JavaScript (sin frameworks pesados)
-- **Styling**: Tailwind CSS + Font Awesome
-- **Charts**: Chart.js para visualizaciones
-- **Storage**: LocalStorage (100% local)
-- **PWA Ready**: Responsive, funciona offline
+## 📊 Modelo de Datos
 
-### **Privacidad y seguridad**
-- ✅ **Sin servidores**: Todos los datos en tu navegador
-- ✅ **Sin tracking**: Cero analíticas, cero cookies
-- ✅ **Sin cuentas**: No hay registros ni logins
-- ✅ **Offline first**: Funciona sin conexión
-- ✅ **Control total**: Tú decides cuándo exportar/borrar datos
-
-### **Backup y portabilidad**
-- **Export completo**: JSON con todos los datos y configuración
-- **Naming automático**: `VitalUp-backup-DD-MM-YYYY_HH-MM-SS.json`
-- **Import selectivo**: Mantiene datos existentes o reemplaza
-
----
-
-## 📄 Estructura de datos
+Los datos se estructuran en registros diarios con la siguiente forma:
 
 ```javascript
-// Registro diario completo
 {
-  fecha: "2024-11-17",
+  fecha: "2024-11-19",
   nutricion: {
-    calorias: 1800,
-    proteinas: 120,
-    comidas: [
-      {
-        tipo: "Desayuno",
-        contenido: "Avena con plátano y proteína",
-        hora: "08:30",
-        calorias: 450,
-        proteinas: 35
-      }
-    ],
-    consumos_negativos: ["Alcohol"],
-    suplementos: ["Proteína", "Omega-3"]
+    calorias: 2100,
+    proteinas: 150,
+    comidas: [...],
+    consumos_negativos: ["Alcohol", "Dulces"],
+    excesos_data: {
+      exceso_alcohol: { calorias: 200, proteinas: 0 }
+    }
   },
-  entrenamiento: {
-    hecho: true,
-    actividades: [{
-      tipo: "Fuerza",
-      duracion: 60,
-      intensidad: "alta",
-      notas: "Tren superior"
-    }]
+  hidratacion: {
+    total: 2500,
+    bebidas: [...]
   },
-  mediciones: {
-    peso: 75.2,
-    perimetro_abdominal: 82.5
-  },
-  sueno: {
-    horas: 7.5,
-    calidad: "buena"
-  },
-  sentimiento: {
-    energia: 4,
-    animo: 4,
-    digestion: "normal",
-    notas: "Día productivo"
-  }
+  entrenamiento: {...},
+  sueno: {...},
+  sentimiento: {...},
+  mediciones: {...}
 }
 ```
 
----
+## 🎨 Personalización
 
-## ❓ Preguntas frecuentes
+La aplicación es completamente configurable desde la sección "Config":
+- Objetivos nutricionales personalizados
+- Tipos de comidas configurables
+- Tipos de ejercicio personalizables
+- Suplementos habituales
+- Consumos negativos a evitar
+- Columnas visibles en tablas
 
-### "¿Puedo usar solo algunas secciones?"
-✅ **Sí**. Deja en blanco lo que no te interese. VitalUp.me se adapta a tu estilo.
+## 📝 Versión
 
-### "¿Qué pasa si me olvido un día?"
-✅ **Sin problema**. Puedes registrar días pasados desde el selector de fecha en el modal.
+**Versión actual**: 2.1.0
 
-### "¿Cómo cambio mis objetivos?"
-✅ **Configuración** → Editar objetivos → Guardar.
+### Cambios recientes (2024-11-19):
 
-### "¿Se borran mis datos al cerrar el navegador?"
-❌ **No**. Todo se guarda en LocalStorage. Solo se borran si limpias datos del navegador.
+#### Nuevas Funcionalidades
+- ✅ Sistema de hidratación manual con tracking de bebidas
+- ✅ Resumen nutricional con actualización en tiempo real
+- ✅ Sistema de excesos con calorías y proteínas independientes
+- ✅ Cálculo de totales nutricionales incluyendo excesos en dashboard y registros
+- ✅ Promedios de 7 días que consideran excesos correctamente
+- ✅ Indicadores de energía con iconos de batería (5 niveles)
+- ✅ Indicadores de ánimo mejorados (5 niveles emoji)
+- ✅ Layout vertical para selectores de energía/ánimo
 
-### "¿Puedo hacer backup?"
-✅ **Sí**. Configuración → Exportar datos → Descarga JSON con todo.
+#### Mejoras de UX
+- ✅ Interfaz simplificada (eliminado sistema de modos rápido/completo)
+- ✅ Actualización visual en tiempo real de bordes en radio buttons
+- ✅ Nombre "Excesos" más claro (antes "Consumos")
+- ✅ Icono de advertencia genérico para excesos
 
----
+#### Correcciones y Limpieza de Código
+- ✅ Eliminado modal duplicado en registros.js
+- ✅ Estadística "días sin alcohol" actualizada a nuevo formato de datos
+- ✅ Eliminadas 558 líneas de código legacy sin usar (renderModoRapido y renderModoCompleto)
+- ✅ Persistencia correcta de datos de excesos en localStorage
+- ✅ Totales nutricionales calculados correctamente desde comidas + excesos
+- ✅ Hidratación persistente al editar registros existentes
 
-## 🔄 Ejemplo de flujo completo
+## 🐛 Problemas Conocidos
 
-**Registrando el lunes por la noche:**
+Ver [issues en GitHub](https://github.com/lolovk/vitalup/issues) para lista actualizada.
 
-1. Clic en (+) → Modal se abre
-2. **Comidas**:
-   - Añadir: Desayuno, 08:30, "Avena + plátano", 400 kcal, 15g
-   - Añadir: Pre-entreno, 17:00, "Café + tostada", 200 kcal, 5g
-   - Añadir: Post-entreno, 19:30, "Batido proteína", 150 kcal, 25g
-   - Añadir: Cena, 21:00, "Salmón + verduras", 500 kcal, 40g
-3. **Suplementos**: Proteína ✅, Omega-3 ✅
-4. **Entrenamiento**: Fuerza, 75 min, alta intensidad, "Push day"
-5. **Mediciones**: Peso 75.1 kg
-6. **Sueño**: 7.5h, calidad buena
-7. **Sentimiento**: Energía 4/5, Ánimo 4/5
-8. **Guardar** → ¡Listo!
+Todos los problemas críticos han sido resueltos en v2.1.0.
 
-**Resultado**: 1250 kcal, 85g proteína calculados automáticamente
+## 🤝 Contribuir
 
----
+Las contribuciones son bienvenidas. Por favor:
 
-**Desarrollado con ❤️ por Lolo + Claude**
-**Versión**: 2.0
-**Sitio web**: [vitalup.me](https://vitalup.me)
-**Última actualización**: Noviembre 2024
+1. Fork el proyecto
+2. Crea una rama para tu feature (`git checkout -b feature/AmazingFeature`)
+3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
+4. Push a la rama (`git push origin feature/AmazingFeature`)
+5. Abre un Pull Request
+
+## 📄 Licencia
+
+Este proyecto es de código abierto y está disponible bajo la licencia MIT.
+
+## 👤 Autor
+
+VitalUp.me - Aplicación de seguimiento de salud personal
+
+## 🙏 Agradecimientos
+
+- Chart.js por la visualización de datos
+- Tailwind CSS por el sistema de diseño
+- Font Awesome por los iconos
+- Claude Code por asistencia en desarrollo
