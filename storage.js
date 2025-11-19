@@ -45,13 +45,6 @@ function saveConfig(config) {
   localStorage.setItem(STORAGE_KEYS.CONFIG, JSON.stringify(config));
 }
 
-function updateConfig(updates) {
-  const config = getConfig();
-  const updated = { ...config, ...updates };
-  saveConfig(updated);
-  return updated;
-}
-
 // ============= REGISTROS =============
 function getRegistros() {
   const stored = localStorage.getItem(STORAGE_KEYS.REGISTROS);
@@ -296,8 +289,7 @@ window.Storage = {
   // Config
   getConfig,
   saveConfig,
-  updateConfig,
-  
+
   // Registros
   getRegistros,
   saveRegistros,
@@ -305,16 +297,16 @@ window.Storage = {
   saveRegistro,
   deleteRegistro,
   createEmptyRegistro,
-  
+
   // Consultas
   getRegistrosRango,
   getUltimosRegistros,
-  
+
   // Import/Export
   exportarTodo,
   importarTodo,
   resetTodo,
-  
+
   // Estadísticas
   getEstadisticasHoy,
   getRachaDias

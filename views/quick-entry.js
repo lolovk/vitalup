@@ -8,7 +8,6 @@ let currentFecha = null;
 let currentRegistro = null;
 
 window.renderQuickEntry = function(fecha = null) {
-  console.log('renderQuickEntry called with:', { fecha });
   currentFecha = fecha || getTodayISO();
 
   // Cargar registro existente o crear uno nuevo
@@ -16,7 +15,6 @@ window.renderQuickEntry = function(fecha = null) {
                     Storage.createEmptyRegistro(currentFecha);
 
   // Debug: verificar datos de hidratación al cargar
-  console.log('Registro cargado - hidratacion:', currentRegistro.hidratacion);
 
   // Migrar datos antiguos si existen
   if (currentRegistro.nutricion.comidas && !Array.isArray(currentRegistro.nutricion.comidas)) {
@@ -29,9 +27,6 @@ window.renderQuickEntry = function(fecha = null) {
   const config = Storage.getConfig();
   const content = document.getElementById('modalContent');
 
-  console.log('modalContent element:', content);
-  console.log('modalContent classList:', content?.classList?.toString());
-  console.log('modalContent innerHTML before:', content?.innerHTML?.length);
 
   // Actualizar título del modal
   updateModalTitle(currentFecha);
@@ -77,18 +72,12 @@ window.renderQuickEntry = function(fecha = null) {
     </form>
   `;
 
-  console.log('Generated modal HTML length:', modalHTML.length);
-  console.log('Setting content innerHTML...');
   content.innerHTML = modalHTML;
-  console.log('modalContent innerHTML after:', content?.innerHTML?.length);
-  console.log('Form element found:', !!document.getElementById('entryForm'));
-  console.log('Modal HTML set, calling setupFormListeners');
   setupFormListeners();
 
   // Actualizar totales al cargar el modal
   setTimeout(() => updateMacroTotals(), 100);
 
-  console.log('renderQuickEntry completed successfully');
 };
 
 function migrarRegistroAntiguo(reg) {
@@ -440,14 +429,6 @@ function updateMacroTotals() {
   const totalCalorias = comidas.reduce((sum, c) => sum + c.calorias, 0);
   const totalProteinas = comidas.reduce((sum, c) => sum + c.proteinas, 0);
 
-  // Debug: mostrar cálculos
-  console.log('updateMacroTotals - Debug:', {
-    comidasEncontradas: comidas.length,
-    comidas,
-    totalCalorias,
-    totalProteinas
-  });
-
   // Actualizar campos de entrada
   const inputCalorias = document.getElementById('inputCalorias');
   const inputProteinas = document.getElementById('inputProteinas');
@@ -698,21 +679,6 @@ function saveRegistro(silent = false) {
                          (totalProteinasComidas > 0 ? totalProteinasComidas :
                          (registroExistente?.nutricion?.proteinas || null));
 
-  // Debug: verificar valores que se van a guardar
-  console.log('saveRegistro - Debug valores:', {
-    nuevoCalorias,
-    nuevoProteinas,
-    totalCaloriasComidas,
-    totalProteinasComidas,
-    inputCaloriasElFound: !!inputCaloriasEl,
-    inputProteinasElFound: !!inputProteinasEl,
-    inputCaloriasElValue: inputCaloriasEl?.value,
-    inputProteinasElValue: inputProteinasEl?.value,
-    comidasCount: comidas.length,
-    // Debug adicional para verificar qué elementos existen
-    inputCaloriasExists: !!document.getElementById('inputCalorias'),
-    inputProteinasExists: !!document.getElementById('inputProteinas')
-  });
   const nuevaHidratacion = parseFloat(document.getElementById('inputHidratacion')?.value);
   const nuevoHorasSueno = parseFloat(document.getElementById('inputSueno')?.value || document.getElementById('inputHorasSueno')?.value);
   const nuevasNotasGenerales = document.getElementById('textNotasGenerales')?.value;
@@ -1037,9 +1003,6 @@ function renderSeccionHidratacion(reg, config) {
   }
 
   // Debug: mostrar datos de hidratacion
-  console.log('renderSeccionHidratacion - reg.hidratacion:', reg.hidratacion);
-  console.log('renderSeccionHidratacion - reg.hidratacion.bebidas:', reg.hidratacion.bebidas);
-  console.log('renderSeccionHidratacion - bebidas length:', reg.hidratacion.bebidas ? reg.hidratacion.bebidas.length : 'undefined');
 
   const totalHidratacion = reg.hidratacion.total || 0;
   const totalLitros = (totalHidratacion / 1000).toFixed(1);
@@ -1416,19 +1379,6 @@ function renderSeccionInformacionPersonal(reg, config) {
 
 
 // ============= PERSONAL DATA FUNCTIONS =============
-function togglePersonalData() {
-  const content = document.getElementById('personalDataContent');
-  const chevron = document.getElementById('personalDataChevron');
-
-  if (content.classList.contains('hidden')) {
-    content.classList.remove('hidden');
-    chevron.style.transform = 'rotate(180deg)';
-  } else {
-    content.classList.add('hidden');
-    chevron.style.transform = 'rotate(0deg)';
-  }
-}
-
 function toggleInformacionPersonal() {
   const content = document.getElementById('informacionPersonalContent');
   const chevron = document.getElementById('informacionPersonalChevron');
@@ -1847,14 +1797,6 @@ function añadirBebidaInterna(tipo, cantidad, hora) {
   currentRegistro.hidratacion.bebidas.push(bebida);
   currentRegistro.hidratacion.total += cantidad;
 
-  // Debug: mostrar datos después de añadir
-  console.log('Después de añadir bebida:', {
-    bebida,
-    totalBebidas: currentRegistro.hidratacion.bebidas.length,
-    bebidas: currentRegistro.hidratacion.bebidas,
-    total: currentRegistro.hidratacion.total
-  });
-
   // Guardar inmediatamente el cambio en localStorage
   Storage.saveRegistro(currentRegistro);
 
@@ -1887,7 +1829,6 @@ function actualizarSeccionHidratacion() {
                             !document.getElementById('hidratacionDetalle').classList.contains('hidden');
 
     // Debug: verificar estado del currentRegistro antes del render
-    console.log('actualizarSeccionHidratacion - currentRegistro.hidratacion:', currentRegistro.hidratacion);
 
     container.outerHTML = renderSeccionHidratacion(currentRegistro, config);
 
@@ -1904,7 +1845,6 @@ function actualizarSeccionHidratacion() {
 // Export functions to global scope
 window.toggleEntrenamientoDetails = toggleEntrenamientoDetails;
 window.toggleDescansoActivoDetails = toggleDescansoActivoDetails;
-window.togglePersonalData = togglePersonalData;
 window.toggleInformacionPersonal = toggleInformacionPersonal;
 window.toggleExcesoInputs = toggleExcesoInputs;
 window.updateIntensidadDisplay = updateIntensidadDisplay;

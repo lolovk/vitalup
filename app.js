@@ -198,6 +198,21 @@ window.addDays = function(dateStr, days) {
   return date.toISOString().split('T')[0];
 };
 
+// Calcular totales nutricionales incluyendo excesos
+window.calcularTotalesConExcesos = function(registro) {
+  let totalCalorias = registro.nutricion.calorias || 0;
+  let totalProteinas = registro.nutricion.proteinas || 0;
+
+  if (registro.nutricion.excesos_data) {
+    Object.values(registro.nutricion.excesos_data).forEach(exceso => {
+      totalCalorias += exceso.calorias || 0;
+      totalProteinas += exceso.proteinas || 0;
+    });
+  }
+
+  return { calorias: totalCalorias, proteinas: totalProteinas };
+};
+
 window.openModal = openModal;
 window.closeModal = closeModal;
 

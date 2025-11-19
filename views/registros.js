@@ -4,22 +4,6 @@
  * VERSIÓN 2.0 con columnas personalizables
  *********************************************/
 
-// Función auxiliar para calcular totales incluyendo excesos
-function calcularTotalesConExcesos(registro) {
-  let totalCalorias = registro.nutricion.calorias || 0;
-  let totalProteinas = registro.nutricion.proteinas || 0;
-
-  // Sumar excesos si existen
-  if (registro.nutricion.excesos_data) {
-    Object.values(registro.nutricion.excesos_data).forEach(exceso => {
-      totalCalorias += exceso.calorias || 0;
-      totalProteinas += exceso.proteinas || 0;
-    });
-  }
-
-  return { calorias: totalCalorias, proteinas: totalProteinas };
-}
-
 window.renderRegistros = function() {
   const app = document.getElementById('app');
   const registros = Storage.getRegistros().sort((a, b) => b.fecha.localeCompare(a.fecha));
@@ -462,39 +446,29 @@ function cancelarColumnas() {
 }
 
 function aplicarFiltros() {
-  console.log('🔍 Aplicando filtros...');
 
   const rangoFechas = document.getElementById('filtroRangoFechas').dataset.range;
   const entrenamiento = document.getElementById('filtroEntrenamiento').value;
 
-  console.log('Rango de fechas:', rangoFechas);
-  console.log('Filtro entrenamiento:', entrenamiento);
 
   let registros = Storage.getRegistros();
-  console.log('Registros totales:', registros.length);
-  console.log('Fechas de los registros:', registros.map(r => r.fecha));
 
   // Filtro por rango de fechas
   if (rangoFechas) {
     const [desde, hasta] = rangoFechas.split(' - ');
-    console.log('Filtrando desde:', desde, 'hasta:', hasta);
     const registrosAntes = registros.length;
     registros = registros.filter(r => r.fecha >= desde && r.fecha <= hasta);
-    console.log('Registros después del filtro de fechas:', registros.length, 'de', registrosAntes);
   }
 
   // Filtro por entrenamiento
   if (entrenamiento === 'con') {
     const registrosAntes = registros.length;
     registros = registros.filter(r => r.entrenamiento.hecho);
-    console.log('Registros con entrenamiento:', registros.length, 'de', registrosAntes);
   } else if (entrenamiento === 'sin') {
     const registrosAntes = registros.length;
     registros = registros.filter(r => !r.entrenamiento.hecho);
-    console.log('Registros sin entrenamiento:', registros.length, 'de', registrosAntes);
   }
 
-  console.log('Registros finales para mostrar:', registros.length);
 
   // Ordenar
   registros.sort((a, b) => b.fecha.localeCompare(a.fecha));
@@ -545,7 +519,6 @@ function filtrarPorDias(dias) {
   const desdeStr = desde.toISOString().split('T')[0];
   const hastaStr = hoy.toISOString().split('T')[0];
 
-  console.log('🗓️ Filtro por días:', { dias, fechaReferencia: fechaReferencia.toISOString().split('T')[0], hoy: hastaStr, desde: desdeStr });
 
   // Actualizar el campo de rango
   const input = document.getElementById('filtroRangoFechas');

@@ -4,22 +4,6 @@
  * VERSIÓN 2.0 compatible con nueva estructura
  *********************************************/
 
-// Función auxiliar para calcular totales incluyendo excesos
-function calcularTotalesConExcesos(registro) {
-  let totalCalorias = registro.nutricion.calorias || 0;
-  let totalProteinas = registro.nutricion.proteinas || 0;
-
-  // Sumar excesos si existen
-  if (registro.nutricion.excesos_data) {
-    Object.values(registro.nutricion.excesos_data).forEach(exceso => {
-      totalCalorias += exceso.calorias || 0;
-      totalProteinas += exceso.proteinas || 0;
-    });
-  }
-
-  return { calorias: totalCalorias, proteinas: totalProteinas };
-}
-
 window.renderDashboard = function() {
   const app = document.getElementById('app');
   const config = Storage.getConfig();
