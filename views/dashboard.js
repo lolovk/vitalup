@@ -103,9 +103,13 @@ function renderRegistroHoy(registro, stats, config) {
                           progresoProteinas >= 70 ? 'warning' : 'danger';
   
   // Verificar consumos negativos
-  const tieneConsumosNegativos = registro.nutricion.consumos_negativos && 
+  const tieneConsumosNegativos = registro.nutricion.consumos_negativos &&
                                   registro.nutricion.consumos_negativos.length > 0;
-  
+
+  // Calcular hidratación
+  const totalHidratacion = registro.hidratacion ? registro.hidratacion.total || 0 : 0;
+  const porcentajeHidratacion = (totalHidratacion / config.objetivos.hidratacion * 100).toFixed(0);
+
   return `
     <div class="bg-white rounded-2xl shadow-lg overflow-hidden">
       <!-- Header -->
@@ -179,7 +183,7 @@ function renderRegistroHoy(registro, stats, config) {
         </div>
         
         <!-- Indicadores adicionales -->
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
           
           <!-- Entrenamiento -->
           <div class="text-center p-4 rounded-lg ${registro.entrenamiento.hecho ? 'bg-green-100' : 'bg-gray-100'}">
@@ -192,8 +196,8 @@ function renderRegistroHoy(registro, stats, config) {
           
           <!-- Consumos negativos -->
           <div class="text-center p-4 rounded-lg ${!tieneConsumosNegativos ? 'bg-green-100' : 'bg-red-100'}">
-            <i class="fas fa-wine-bottle text-2xl ${!tieneConsumosNegativos ? 'text-green-600' : 'text-red-600'} mb-2"></i>
-            <div class="text-sm font-medium text-gray-700">Consumos</div>
+            <i class="fas fa-exclamation-triangle text-2xl ${!tieneConsumosNegativos ? 'text-green-600' : 'text-red-600'} mb-2"></i>
+            <div class="text-sm font-medium text-gray-700">Excesos</div>
             <div class="text-xs ${!tieneConsumosNegativos ? 'text-green-600' : 'text-red-600'} font-semibold mt-1">
               ${!tieneConsumosNegativos ? '✓ Ninguno' : `✗ ${registro.nutricion.consumos_negativos.length}`}
             </div>
@@ -207,7 +211,16 @@ function renderRegistroHoy(registro, stats, config) {
               ${registro.sueno.horas ? registro.sueno.horas.toFixed(1) : 0}h
             </div>
           </div>
-          
+
+          <!-- Hidratación -->
+          <div class="text-center p-4 rounded-lg ${porcentajeHidratacion >= 100 ? 'bg-green-100' : porcentajeHidratacion >= 70 ? 'bg-yellow-100' : 'bg-red-100'}">
+            <i class="fas fa-tint text-2xl ${porcentajeHidratacion >= 100 ? 'text-green-600' : porcentajeHidratacion >= 70 ? 'text-yellow-600' : 'text-red-600'} mb-2"></i>
+            <div class="text-sm font-medium text-gray-700">Hidratación</div>
+            <div class="text-xs ${porcentajeHidratacion >= 100 ? 'text-green-600' : porcentajeHidratacion >= 70 ? 'text-yellow-600' : 'text-red-600'} font-semibold mt-1">
+              ${(totalHidratacion / 1000).toFixed(1)}L / ${(config.objetivos.hidratacion / 1000).toFixed(1)}L
+            </div>
+          </div>
+
           <!-- Sensación -->
           <div class="text-center p-4 rounded-lg bg-blue-100">
             <div class="text-3xl mb-2">

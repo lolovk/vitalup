@@ -4,18 +4,19 @@
  * VERSIÓN 2.0 con comidas dinámicas
  *********************************************/
 
-let currentMode = 'rapido';
 let currentFecha = null;
 let currentRegistro = null;
 
-window.renderQuickEntry = function(fecha = null, modo = 'rapido') {
-  console.log('renderQuickEntry called with:', { fecha, modo });
+window.renderQuickEntry = function(fecha = null) {
+  console.log('renderQuickEntry called with:', { fecha });
   currentFecha = fecha || getTodayISO();
-  currentMode = modo;
 
   // Cargar registro existente o crear uno nuevo
   currentRegistro = Storage.getRegistroByFecha(currentFecha) ||
                     Storage.createEmptyRegistro(currentFecha);
+
+  // Debug: verificar datos de hidratación al cargar
+  console.log('Registro cargado - hidratacion:', currentRegistro.hidratacion);
 
   // Migrar datos antiguos si existen
   if (currentRegistro.nutricion.comidas && !Array.isArray(currentRegistro.nutricion.comidas)) {
@@ -55,6 +56,9 @@ window.renderQuickEntry = function(fecha = null, modo = 'rapido') {
 
       <!-- SECCIÓN: ENTRENAMIENTO -->
       ${renderSeccionEntrenamiento(currentRegistro, config)}
+
+      <!-- SECCIÓN: HIDRATACIÓN -->
+      ${renderSeccionHidratacion(currentRegistro, config)}
 
       <!-- SECCIÓN: BIENESTAR -->
       ${renderSeccionBienestar(currentRegistro, config)}
@@ -170,7 +174,7 @@ function renderModoRapido(reg, config) {
 
       <!-- Cálculo automático de calorías y proteínas -->
       <div class="bg-white/70 rounded-lg p-4 mb-4">
-        <div class="grid md:grid-cols-2 gap-4">
+        <div class="grid md:grid-cols-3 gap-4">
 
           <!-- Calorías -->
           <div>
@@ -222,13 +226,36 @@ function renderModoRapido(reg, config) {
             </div>
           </div>
 
+          <!-- Hidratación -->
+          <div>
+            <label class="block text-sm font-semibold text-gray-700 mb-2">
+              <i class="fas fa-tint text-blue-500 mr-1"></i>
+              Hidratación
+            </label>
+            <div class="relative">
+              <input type="number"
+                     id="inputHidratacion"
+                     value="${reg.hidratacion?.total || ''}"
+                     placeholder="${config.objetivos.hidratacion}"
+                     class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 text-lg font-semibold"
+                     inputmode="numeric"
+                     step="250"
+                     min="0"
+                     max="10000">
+              <span class="absolute right-4 top-3.5 text-gray-400 font-medium">ml</span>
+            </div>
+            <div class="mt-1 text-xs text-gray-500">
+              Objetivo: ${(config.objetivos.hidratacion / 1000).toFixed(1)}L (${config.objetivos.hidratacion}ml)
+            </div>
+          </div>
+
         </div>
 
         ${totalCaloriasComidas === 0 ? `
           <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
             <p class="text-sm text-blue-800">
               <i class="fas fa-info-circle mr-2"></i>
-              <strong>Primera vez registrando:</strong> Introduce los valores manualmente. En "Más detalles" podrás añadir comidas individuales que calcularán estos totales automáticamente.
+              <strong>Primera vez registrando:</strong> Introduce los valores manualmente o añade comidas individuales abajo que calcularán estos totales automáticamente.
             </p>
           </div>
         ` : ''}
@@ -351,18 +378,21 @@ function renderModoRapido(reg, config) {
             <i class="fas fa-smile text-yellow-500 mr-1"></i>
             ¿Cómo te sientes hoy?
           </label>
-          <div class="grid grid-cols-4 gap-2">
-            ${[1,2,3,4].map(n => `
-              <label class="flex flex-col items-center p-3 border-2 rounded-lg cursor-pointer hover:bg-white transition ${reg.sentimiento.animo === n ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}">
+          <div class="animo-group flex flex-col gap-2">
+            ${[1,2,3,4,5].map(n => {
+              const emojis = ['😢', '😔', '😐', '🙂', '😄'];
+              const labels = ['Muy triste', 'Triste', 'Neutro', 'Contento', 'Muy feliz'];
+              return `
+              <label class="flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-white transition ${reg.sentimiento.animo === n ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}">
                 <input type="radio"
                        name="animo"
                        value="${n}"
                        ${reg.sentimiento.animo === n ? 'checked' : ''}
                        class="sr-only">
-                <span class="text-2xl mb-1">${['😔','😐','🙂','😀'][n-1]}</span>
-                <span class="text-xs font-medium">${['Bajo','Regular','Bien','Genial'][n-1]}</span>
+                <span class="text-2xl">${emojis[n-1]}</span>
+                <span class="text-sm font-medium flex-1">${labels[n-1]}</span>
               </label>
-            `).join('')}
+            `}).join('')}
           </div>
         </div>
       </div>
@@ -460,8 +490,6 @@ function renderModoCompleto(reg, config) {
         </button>
       </div>
 
-      <!-- Contadores automáticos de calorías y proteínas -->
-      ${reg.nutricion.comidas.length > 0 ? renderMacroCounters(reg, config) : ''}
     </div>
     
     <!-- Suplementos -->
@@ -611,35 +639,42 @@ function renderModoCompleto(reg, config) {
       <div class="grid md:grid-cols-2 gap-4">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-2">Nivel de energía</label>
-          <div class="grid grid-cols-4 gap-2">
-            ${[1,2,3,4].map(n => `
-              <label class="flex flex-col items-center p-2 border-2 rounded-lg cursor-pointer hover:bg-gray-50 ${reg.sentimiento.energia === n ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}">
-                <input type="radio" 
+          <div class="energia-group flex flex-col gap-2">
+            ${[1,2,3,4,5].map(n => {
+              const batteryIcons = ['fa-battery-empty', 'fa-battery-quarter', 'fa-battery-half', 'fa-battery-three-quarters', 'fa-battery-full'];
+              const batteryColors = ['text-red-500', 'text-orange-500', 'text-yellow-500', 'text-lime-500', 'text-green-500'];
+              const labels = ['Muy bajo', 'Bajo', 'Normal', 'Bien', 'Excelente'];
+              return `
+              <label class="flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 ${reg.sentimiento.energia === n ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}">
+                <input type="radio"
                        name="energia"
                        value="${n}"
                        ${reg.sentimiento.energia === n ? 'checked' : ''}
                        class="sr-only">
-                <span class="text-2xl mb-1">${['😩','😐','🙂','💪'][n-1]}</span>
-                <span class="text-xs">${n}</span>
+                <i class="fas ${batteryIcons[n-1]} text-2xl ${batteryColors[n-1]}"></i>
+                <span class="text-sm font-medium flex-1">${labels[n-1]}</span>
               </label>
-            `).join('')}
+            `}).join('')}
           </div>
         </div>
-        
+
         <div>
-          <label class="block text-sm font-medium text-gray-700 mb-2">Ánimo</label>
-          <div class="grid grid-cols-4 gap-2">
-            ${[1,2,3,4].map(n => `
-              <label class="flex flex-col items-center p-2 border-2 rounded-lg cursor-pointer hover:bg-gray-50 ${reg.sentimiento.animo === n ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}">
-                <input type="radio" 
+          <label class="block text-sm font-medium text-gray-700 mb-2">Estado de ánimo</label>
+          <div class="animo-group flex flex-col gap-2">
+            ${[1,2,3,4,5].map(n => {
+              const emojis = ['😢', '😔', '😐', '🙂', '😄'];
+              const labels = ['Muy triste', 'Triste', 'Neutro', 'Contento', 'Muy feliz'];
+              return `
+              <label class="flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 ${reg.sentimiento.animo === n ? 'border-blue-500 bg-blue-50' : 'border-gray-200'}">
+                <input type="radio"
                        name="animo"
                        value="${n}"
                        ${reg.sentimiento.animo === n ? 'checked' : ''}
                        class="sr-only">
-                <span class="text-2xl mb-1">${['😔','😐','🙂','😀'][n-1]}</span>
-                <span class="text-xs">${n}</span>
+                <span class="text-2xl">${emojis[n-1]}</span>
+                <span class="text-sm font-medium flex-1">${labels[n-1]}</span>
               </label>
-            `).join('')}
+            `}).join('')}
           </div>
         </div>
       </div>
@@ -873,22 +908,60 @@ function setupFormListeners() {
     e.preventDefault();
     saveRegistro();
   });
+
+  // Event listeners para actualizar visualización de radio buttons
+  const energiaRadios = document.querySelectorAll('input[name="energia"]');
+  energiaRadios.forEach(radio => {
+    radio.addEventListener('change', function() {
+      // Remover clases de selección de todos los labels hermanos
+      const allLabels = this.closest('.energia-group').querySelectorAll('label');
+      allLabels.forEach(label => {
+        label.classList.remove('border-blue-500', 'bg-blue-50', 'border-purple-500', 'bg-purple-50');
+        label.classList.add('border-gray-200');
+      });
+
+      // Añadir clases de selección al label actual
+      const currentLabel = this.closest('label');
+      currentLabel.classList.remove('border-gray-200');
+      currentLabel.classList.add('border-blue-500', 'bg-blue-50');
+    });
+  });
+
+  const animoRadios = document.querySelectorAll('input[name="animo"]');
+  animoRadios.forEach(radio => {
+    radio.addEventListener('change', function() {
+      // Remover clases de selección de todos los labels hermanos
+      const allLabels = this.closest('.animo-group').querySelectorAll('label');
+      allLabels.forEach(label => {
+        label.classList.remove('border-blue-500', 'bg-blue-50', 'border-purple-500', 'bg-purple-50');
+        label.classList.add('border-gray-200');
+      });
+
+      // Añadir clases de selección al label actual
+      const currentLabel = this.closest('label');
+      currentLabel.classList.remove('border-gray-200');
+      currentLabel.classList.add('border-blue-500', 'bg-blue-50');
+    });
+  });
+
+  // Event listeners para actualizar resumen nutricional en tiempo real
+  setupNutricionalListeners();
 }
 
-function toggleMode() {
-  currentMode = currentMode === 'rapido' ? 'completo' : 'rapido';
-  
-  const modoCompleto = document.getElementById('modoCompleto');
-  const btnToggle = document.getElementById('btnToggleMode');
-  
-  if (currentMode === 'completo') {
-    modoCompleto.classList.remove('hidden');
-    btnToggle.innerHTML = '<i class="fas fa-minus-circle mr-2"></i>Modo rápido';
-  } else {
-    modoCompleto.classList.add('hidden');
-    btnToggle.innerHTML = '<i class="fas fa-plus-circle mr-2"></i>Más detalles';
-  }
+function setupNutricionalListeners() {
+  // Añadir listeners a inputs de calorías y proteínas en comidas
+  document.querySelectorAll('.comida-calorias, .comida-proteinas').forEach(input => {
+    input.addEventListener('input', actualizarResumenNutricional);
+    input.addEventListener('change', actualizarResumenNutricional);
+  });
+
+  // Añadir listeners a inputs de excesos (buscar por ID que empiecen con exceso_)
+  document.querySelectorAll('input[id^="exceso_calorias_"], input[id^="exceso_proteinas_"]').forEach(input => {
+    input.addEventListener('input', actualizarResumenNutricional);
+    input.addEventListener('change', actualizarResumenNutricional);
+  });
 }
+
 
 function toggleEntrenamientoDetails(checked) {
   const container = document.getElementById('entrenamientoDetailsContainer');
@@ -925,23 +998,23 @@ function updateMacroTotals() {
   const totalCalorias = comidas.reduce((sum, c) => sum + c.calorias, 0);
   const totalProteinas = comidas.reduce((sum, c) => sum + c.proteinas, 0);
 
-  // Actualizar campos tanto en modo rápido como completo
+  // Debug: mostrar cálculos
+  console.log('updateMacroTotals - Debug:', {
+    comidasEncontradas: comidas.length,
+    comidas,
+    totalCalorias,
+    totalProteinas
+  });
+
+  // Actualizar campos de entrada
   const inputCalorias = document.getElementById('inputCalorias');
-  const inputCaloriasCompleto = document.getElementById('inputCaloriasCompleto');
   const inputProteinas = document.getElementById('inputProteinas');
-  const inputProteinasCompleto = document.getElementById('inputProteinasCompleto');
 
   if (inputCalorias && totalCalorias > 0) {
     inputCalorias.value = totalCalorias;
   }
-  if (inputCaloriasCompleto && totalCalorias > 0) {
-    inputCaloriasCompleto.value = totalCalorias;
-  }
   if (inputProteinas && totalProteinas > 0) {
     inputProteinas.value = totalProteinas;
-  }
-  if (inputProteinasCompleto && totalProteinas > 0) {
-    inputProteinasCompleto.value = totalProteinas;
   }
 
   // Actualizar textos descriptivos si existen
@@ -963,14 +1036,14 @@ function updateFecha(nuevaFecha) {
     currentRegistro = migrarRegistroAntiguo(currentRegistro);
   }
   
-  renderQuickEntry(currentFecha, currentMode);
+  renderQuickEntry(currentFecha);
 }
 
 function agregarComida() {
   const config = Storage.getConfig();
   const listComidas = document.getElementById('listComidas');
   const idx = listComidas.children.length;
-  
+
   const nuevaComida = {
     tipo: config.tipos_comida[0],
     contenido: '',
@@ -978,11 +1051,27 @@ function agregarComida() {
     calorias: null,
     proteinas: null
   };
-  
+
   listComidas.insertAdjacentHTML('beforeend', renderComidaRow(nuevaComida, idx, config));
+
+  // Añadir event listeners a la nueva fila
+  const nuevaFila = listComidas.lastElementChild;
+  const caloriasInput = nuevaFila.querySelector('.comida-calorias');
+  const proteinasInput = nuevaFila.querySelector('.comida-proteinas');
+
+  if (caloriasInput) {
+    caloriasInput.addEventListener('input', actualizarResumenNutricional);
+    caloriasInput.addEventListener('change', actualizarResumenNutricional);
+  }
+
+  if (proteinasInput) {
+    proteinasInput.addEventListener('input', actualizarResumenNutricional);
+    proteinasInput.addEventListener('change', actualizarResumenNutricional);
+  }
 
   // Actualizar totales después de agregar una nueva comida
   updateMacroTotals();
+  actualizarResumenNutricional();
 }
 
 function agregarEntrenamiento() {
@@ -1052,6 +1141,9 @@ function eliminarComida(idx) {
 }
 
 function saveRegistro(silent = false) {
+  // Forzar actualización de totales antes de guardar
+  updateMacroTotals();
+
   // Actualizar objetivos si han cambiado
   const caloriasObjetivoInput = document.getElementById('inputCaloriasObjetivo');
   const proteinasObjetivoInput = document.getElementById('inputProteinasObjetivo');
@@ -1145,11 +1237,59 @@ function saveRegistro(silent = false) {
                         config.info_personal.perimetro_inicial ||
                         (registroAnterior?.mediciones?.perimetro_abdominal || null));
   
-  // Obtener valores actuales del formulario
-  const nuevoCalorias = parseFloat(document.getElementById('inputCalorias')?.value || document.getElementById('inputCaloriasCompleto')?.value);
-  const nuevoProteinas = parseFloat(document.getElementById('inputProteinas')?.value || document.getElementById('inputProteinasCompleto')?.value);
+  // Calcular totales directamente desde las comidas
+  const totalCaloriasComidas = comidas.reduce((sum, c) => sum + (c.calorias || 0), 0);
+  const totalProteinasComidas = comidas.reduce((sum, c) => sum + (c.proteinas || 0), 0);
+
+  // Obtener valores actuales del formulario, pero usar los calculados como fallback
+  const inputCaloriasEl = document.getElementById('inputCalorias');
+  const inputProteinasEl = document.getElementById('inputProteinas');
+
+  // Prioridad: campo de entrada -> total calculado desde comidas -> registro existente
+  const nuevoCalorias = inputCaloriasEl && inputCaloriasEl.value ?
+                        parseFloat(inputCaloriasEl.value) :
+                        (totalCaloriasComidas > 0 ? totalCaloriasComidas :
+                        (registroExistente?.nutricion?.calorias || null));
+
+  const nuevoProteinas = inputProteinasEl && inputProteinasEl.value ?
+                         parseFloat(inputProteinasEl.value) :
+                         (totalProteinasComidas > 0 ? totalProteinasComidas :
+                         (registroExistente?.nutricion?.proteinas || null));
+
+  // Debug: verificar valores que se van a guardar
+  console.log('saveRegistro - Debug valores:', {
+    nuevoCalorias,
+    nuevoProteinas,
+    totalCaloriasComidas,
+    totalProteinasComidas,
+    inputCaloriasElFound: !!inputCaloriasEl,
+    inputProteinasElFound: !!inputProteinasEl,
+    inputCaloriasElValue: inputCaloriasEl?.value,
+    inputProteinasElValue: inputProteinasEl?.value,
+    comidasCount: comidas.length,
+    // Debug adicional para verificar qué elementos existen
+    inputCaloriasExists: !!document.getElementById('inputCalorias'),
+    inputProteinasExists: !!document.getElementById('inputProteinas')
+  });
+  const nuevaHidratacion = parseFloat(document.getElementById('inputHidratacion')?.value);
   const nuevoHorasSueno = parseFloat(document.getElementById('inputSueno')?.value || document.getElementById('inputHorasSueno')?.value);
   const nuevasNotasGenerales = document.getElementById('textNotasGenerales')?.value;
+
+  // Recoger datos de excesos (calorías y proteínas de cada consumo negativo)
+  const excesosData = {};
+  const consumosNegativosMarcados = Array.from(document.querySelectorAll('input[name="consumos_negativos"]:checked'))
+                                         .map(cb => cb.value);
+
+  consumosNegativosMarcados.forEach(consumo => {
+    const excesoKey = `exceso_${consumo.toLowerCase().replace(/\s+/g, '_')}`;
+    const caloriasInput = document.getElementById(`exceso_calorias_${excesoKey}`);
+    const proteinasInput = document.getElementById(`exceso_proteinas_${excesoKey}`);
+
+    excesosData[excesoKey] = {
+      calorias: caloriasInput ? (parseFloat(caloriasInput.value) || 0) : 0,
+      proteinas: proteinasInput ? (parseFloat(proteinasInput.value) || 0) : 0
+    };
+  });
 
   // Crear objeto registro preservando datos existentes
   const registro = {
@@ -1159,8 +1299,8 @@ function saveRegistro(silent = false) {
       calorias: !isNaN(nuevoCalorias) ? nuevoCalorias : registroExistente?.nutricion?.calorias || null,
       proteinas: !isNaN(nuevoProteinas) ? nuevoProteinas : registroExistente?.nutricion?.proteinas || null,
       comidas: comidas.length > 0 ? comidas : (registroExistente?.nutricion?.comidas || []),
-      consumos_negativos: Array.from(document.querySelectorAll('input[name="consumos_negativos"]:checked'))
-                               .map(cb => cb.value),
+      consumos_negativos: consumosNegativosMarcados,
+      excesos_data: excesosData,
       suplementos: Array.from(document.querySelectorAll('input[name="suplementos"]:checked'))
                         .map(cb => cb.value)
     },
@@ -1169,6 +1309,11 @@ function saveRegistro(silent = false) {
       peso: pesoFinal,
       perimetro_abdominal: perimetroFinal,
       otras: registroExistente?.mediciones?.otras || {}
+    },
+
+    hidratacion: {
+      total: !isNaN(nuevaHidratacion) ? nuevaHidratacion : (registroExistente?.hidratacion?.total || currentRegistro?.hidratacion?.total || 0),
+      bebidas: registroExistente?.hidratacion?.bebidas || currentRegistro?.hidratacion?.bebidas || []
     },
 
     entrenamiento: {
@@ -1438,6 +1583,135 @@ function renderSeccionEntrenamiento(reg, config) {
   `;
 }
 
+function renderSeccionHidratacion(reg, config) {
+  // Asegurar que hidratacion existe
+  if (!reg.hidratacion) {
+    reg.hidratacion = { total: 0, bebidas: [] };
+  }
+
+  // Asegurar que el array de bebidas existe
+  if (!reg.hidratacion.bebidas) {
+    reg.hidratacion.bebidas = [];
+  }
+
+  // Debug: mostrar datos de hidratacion
+  console.log('renderSeccionHidratacion - reg.hidratacion:', reg.hidratacion);
+  console.log('renderSeccionHidratacion - reg.hidratacion.bebidas:', reg.hidratacion.bebidas);
+  console.log('renderSeccionHidratacion - bebidas length:', reg.hidratacion.bebidas ? reg.hidratacion.bebidas.length : 'undefined');
+
+  const totalHidratacion = reg.hidratacion.total || 0;
+  const totalLitros = (totalHidratacion / 1000).toFixed(1);
+  const objetivoLitros = (config.objetivos.hidratacion / 1000).toFixed(1);
+  const porcentaje = Math.round((totalHidratacion / config.objetivos.hidratacion) * 100);
+  const colorIndicador = porcentaje >= 100 ? 'text-green-600' : porcentaje >= 70 ? 'text-yellow-600' : 'text-red-600';
+
+  return `
+    <div class="bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200 rounded-xl p-6 space-y-4">
+      <h2 class="text-xl font-bold text-gray-900 flex items-center gap-3 mb-4">
+        <i class="fas fa-tint text-blue-600 text-2xl"></i>
+        <span>Hidratación</span>
+      </h2>
+
+      <!-- Resumen actual -->
+      <div class="bg-white/60 rounded-lg p-4 mb-4">
+        <div class="flex items-center justify-between mb-2">
+          <span class="text-sm text-gray-600">Progreso del día</span>
+          <span class="text-sm font-medium ${colorIndicador}">${porcentaje}%</span>
+        </div>
+        <div class="flex items-center gap-2">
+          <i class="fas fa-tint ${colorIndicador}"></i>
+          <span class="font-bold text-lg">${totalLitros}L</span>
+          <span class="text-gray-600">/ ${objetivoLitros}L</span>
+        </div>
+        <div class="w-full bg-gray-200 rounded-full h-2 mt-2">
+          <div class="bg-blue-500 h-2 rounded-full transition-all" style="width: ${Math.min(porcentaje, 100)}%"></div>
+        </div>
+      </div>
+
+      <!-- Botones rápidos -->
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4">
+        <button type="button" onclick="añadirHidratacion(250, 'Agua')"
+                class="flex flex-col items-center gap-2 p-3 bg-white rounded-lg border-2 border-gray-300 hover:border-blue-500 transition">
+          <i class="fas fa-glass-water text-blue-600"></i>
+          <span class="text-sm font-medium">Vaso</span>
+          <span class="text-xs text-gray-500">250ml</span>
+        </button>
+
+        <button type="button" onclick="añadirHidratacion(500, 'Agua')"
+                class="flex flex-col items-center gap-2 p-3 bg-white rounded-lg border-2 border-gray-300 hover:border-blue-500 transition">
+          <i class="fas fa-bottle-water text-blue-600"></i>
+          <span class="text-sm font-medium">Botella</span>
+          <span class="text-xs text-gray-500">500ml</span>
+        </button>
+
+        <button type="button" onclick="añadirHidratacion(1000, 'Agua')"
+                class="flex flex-col items-center gap-2 p-3 bg-white rounded-lg border-2 border-gray-300 hover:border-blue-500 transition">
+          <i class="fas fa-jug-detergent text-blue-600"></i>
+          <span class="text-sm font-medium">Litro</span>
+          <span class="text-xs text-gray-500">1000ml</span>
+        </button>
+
+        <button type="button" onclick="toggleHidratacionDetalle()"
+                class="flex flex-col items-center gap-2 p-3 bg-white rounded-lg border-2 border-gray-300 hover:border-green-500 transition">
+          <i class="fas fa-plus text-green-600"></i>
+          <span class="text-sm font-medium">Manual</span>
+          <span class="text-xs text-gray-500">Detalle</span>
+        </button>
+      </div>
+
+      <!-- Detalle manual (oculto por defecto) -->
+      <div id="hidratacionDetalle" class="hidden space-y-4">
+        <div class="bg-white/60 rounded-lg p-4 space-y-3">
+          <h3 class="font-semibold text-gray-800">Añadir bebida</h3>
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Tipo</label>
+              <select id="tipoBebida" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+                ${config.tipos_bebida.map(tipo => `<option value="${tipo}">${tipo}</option>`).join('')}
+              </select>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Cantidad (ml)</label>
+              <input type="number" id="cantidadBebida" min="0" max="2000" step="50"
+                     placeholder="250" class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-1">Hora</label>
+              <input type="time" id="horaBebida" value="${new Date().toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'})}"
+                     class="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500">
+            </div>
+          </div>
+          <button type="button" onclick="añadirHidratacionManual()"
+                  class="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition">
+            <i class="fas fa-plus mr-2"></i>Añadir bebida
+          </button>
+        </div>
+      </div>
+
+      <!-- Lista de bebidas del día -->
+      <div id="listaBebidas" class="space-y-2">
+        ${(reg.hidratacion.bebidas || []).map((bebida, index) => `
+          <div class="flex items-center justify-between bg-white/60 rounded-lg p-3">
+            <div class="flex items-center gap-3">
+              <i class="fas fa-tint text-blue-500"></i>
+              <div>
+                <span class="font-medium">${bebida.tipo}</span>
+                <span class="text-sm text-gray-600 ml-2">${bebida.cantidad}ml</span>
+              </div>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-500">${bebida.hora}</span>
+              <button onclick="eliminarBebida(${index})" class="text-red-500 hover:text-red-700 text-sm">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
 function renderSeccionBienestar(reg, config) {
   return `
     <div class="bg-gradient-to-r from-purple-50 to-indigo-50 border border-purple-200 rounded-xl p-6 space-y-4">
@@ -1482,31 +1756,44 @@ function renderSeccionBienestar(reg, config) {
       <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-3">Nivel de energía</label>
-          <div class="space-y-2">
-            ${[1,2,3,4,5].map(level => {
-              const isSelected = reg.sentimiento.energia ? reg.sentimiento.energia === level : level === 3;
+          <div class="energia-group flex flex-col gap-2">
+            ${[1,2,3,4,5].map(n => {
+              const batteryIcons = ['fa-battery-empty', 'fa-battery-quarter', 'fa-battery-half', 'fa-battery-three-quarters', 'fa-battery-full'];
+              const batteryColors = ['text-red-500', 'text-orange-500', 'text-yellow-500', 'text-lime-500', 'text-green-500'];
+              const labels = ['Muy bajo', 'Bajo', 'Normal', 'Bien', 'Excelente'];
+              const isSelected = reg.sentimiento.energia ? reg.sentimiento.energia === n : n === 3;
               return `
-                <label class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-purple-50 transition ${isSelected ? 'border-purple-500 bg-purple-50' : 'border-gray-200'}">
-                  <input type="radio" name="energia" value="${level}" ${isSelected ? 'checked' : ''} class="w-4 h-4 text-purple-600">
-                  <span class="text-sm">${level} - ${['Muy bajo', 'Bajo', 'Normal', 'Alto', 'Muy alto'][level-1]}</span>
-                </label>
-              `;
-            }).join('')}
+              <label class="flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 ${isSelected ? 'border-purple-500 bg-purple-50' : 'border-gray-200'}">
+                <input type="radio"
+                       name="energia"
+                       value="${n}"
+                       ${isSelected ? 'checked' : ''}
+                       class="sr-only">
+                <i class="fas ${batteryIcons[n-1]} text-2xl ${batteryColors[n-1]}"></i>
+                <span class="text-sm font-medium flex-1">${labels[n-1]}</span>
+              </label>
+            `}).join('')}
           </div>
         </div>
 
         <div>
           <label class="block text-sm font-medium text-gray-700 mb-3">Estado de ánimo</label>
-          <div class="space-y-2">
-            ${[1,2,3,4,5].map(level => {
-              const isSelected = reg.sentimiento.animo ? reg.sentimiento.animo === level : level === 3;
+          <div class="animo-group flex flex-col gap-2">
+            ${[1,2,3,4,5].map(n => {
+              const emojis = ['😢', '😔', '😐', '🙂', '😄'];
+              const labels = ['Muy triste', 'Triste', 'Neutro', 'Contento', 'Muy feliz'];
+              const isSelected = reg.sentimiento.animo ? reg.sentimiento.animo === n : n === 3;
               return `
-                <label class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-purple-50 transition ${isSelected ? 'border-purple-500 bg-purple-50' : 'border-gray-200'}">
-                  <input type="radio" name="animo" value="${level}" ${isSelected ? 'checked' : ''} class="w-4 h-4 text-purple-600">
-                  <span class="text-sm">${level} - ${['Muy malo', 'Malo', 'Neutral', 'Bueno', 'Muy bueno'][level-1]}</span>
-                </label>
-              `;
-            }).join('')}
+              <label class="flex items-center gap-3 p-3 border-2 rounded-lg cursor-pointer hover:bg-gray-50 ${isSelected ? 'border-purple-500 bg-purple-50' : 'border-gray-200'}">
+                <input type="radio"
+                       name="animo"
+                       value="${n}"
+                       ${isSelected ? 'checked' : ''}
+                       class="sr-only">
+                <span class="text-2xl">${emojis[n-1]}</span>
+                <span class="text-sm font-medium flex-1">${labels[n-1]}</span>
+              </label>
+            `}).join('')}
           </div>
         </div>
       </div>
@@ -1685,77 +1972,6 @@ function renderSeccionInformacionPersonal(reg, config) {
   `;
 }
 
-// ============= MACRO COUNTERS =============
-function renderMacroCounters(reg, config) {
-  const totalCaloriasComidas = reg.nutricion.comidas.reduce((sum, c) => sum + (c.calorias || 0), 0);
-  const totalProteinasComidas = reg.nutricion.comidas.reduce((sum, c) => sum + (c.proteinas || 0), 0);
-
-  return `
-    <div class="mt-6 bg-white/70 rounded-lg p-4 border-t-2 border-green-300">
-      <div class="mb-3">
-        <h4 class="text-sm font-bold text-gray-700 flex items-center gap-2">
-          <i class="fas fa-calculator text-green-600"></i>
-          Totales calculados automáticamente
-        </h4>
-      </div>
-
-      <div class="grid md:grid-cols-2 gap-4">
-        <!-- Calorías totales -->
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">
-            <i class="fas fa-fire text-orange-500 mr-1"></i>
-            Calorías totales <span class="text-red-500">*</span>
-          </label>
-          <div class="relative">
-            <input type="number"
-                   id="inputCaloriasCompleto"
-                   value="${totalCaloriasComidas > 0 ? totalCaloriasComidas : (reg.nutricion.calorias || '')}"
-                   placeholder="${config.objetivos.calorias}"
-                   class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 text-lg font-semibold bg-green-50"
-                   inputmode="numeric"
-                   step="1"
-                   readonly>
-            <span class="absolute right-4 top-3.5 text-gray-400 font-medium">kcal</span>
-          </div>
-          <div class="mt-1 text-xs text-green-700 macro-calculation-text">
-            <i class="fas fa-check-circle mr-1"></i>
-            Calculado de ${reg.nutricion.comidas.length} comida${reg.nutricion.comidas.length !== 1 ? 's' : ''}
-          </div>
-        </div>
-
-        <!-- Proteínas totales -->
-        <div>
-          <label class="block text-sm font-semibold text-gray-700 mb-2">
-            <i class="fas fa-drumstick-bite text-red-500 mr-1"></i>
-            Proteínas totales <span class="text-red-500">*</span>
-          </label>
-          <div class="relative">
-            <input type="number"
-                   id="inputProteinasCompleto"
-                   value="${totalProteinasComidas > 0 ? totalProteinasComidas : (reg.nutricion.proteinas || '')}"
-                   placeholder="${config.objetivos.proteinas}"
-                   class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-green-500 text-lg font-semibold bg-green-50"
-                   inputmode="numeric"
-                   step="1"
-                   readonly>
-            <span class="absolute right-4 top-3.5 text-gray-400 font-medium">g</span>
-          </div>
-          <div class="mt-1 text-xs text-green-700 macro-calculation-text">
-            <i class="fas fa-check-circle mr-1"></i>
-            Calculado de ${reg.nutricion.comidas.length} comida${reg.nutricion.comidas.length !== 1 ? 's' : ''}
-          </div>
-        </div>
-      </div>
-
-      <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-        <p class="text-sm text-blue-800">
-          <i class="fas fa-info-circle mr-2"></i>
-          <strong>Automático:</strong> Estos valores se actualizan cuando modificas las calorías o proteínas de cada comida individual.
-        </p>
-      </div>
-    </div>
-  `;
-}
 
 // ============= PERSONAL DATA FUNCTIONS =============
 function togglePersonalData() {
@@ -2001,6 +2217,74 @@ function renderResumenNutricional(reg, config) {
   `;
 }
 
+// Actualizar resumen nutricional en tiempo real
+function actualizarResumenNutricional() {
+  const resumenDiv = document.getElementById('resumenNutricional');
+  if (!resumenDiv) return;
+
+  const config = Storage.getConfig();
+
+  // Calcular totales de comidas desde el DOM
+  let totalCaloriasComidas = 0;
+  let totalProteinasComidas = 0;
+
+  document.querySelectorAll('.comida-row').forEach(row => {
+    const calorias = parseFloat(row.querySelector('.comida-calorias')?.value) || 0;
+    const proteinas = parseFloat(row.querySelector('.comida-proteinas')?.value) || 0;
+    totalCaloriasComidas += calorias;
+    totalProteinasComidas += proteinas;
+  });
+
+  // Calcular totales de excesos desde el DOM
+  let totalCaloriasExcesos = 0;
+  let totalProteinasExcesos = 0;
+
+  config.consumos_negativos.forEach(consumo => {
+    const excesoKey = `exceso_${consumo.toLowerCase().replace(/\s+/g, '_')}`;
+    const caloriasInput = document.getElementById(`exceso_calorias_${excesoKey}`);
+    const proteinasInput = document.getElementById(`exceso_proteinas_${excesoKey}`);
+
+    if (caloriasInput) totalCaloriasExcesos += parseFloat(caloriasInput.value) || 0;
+    if (proteinasInput) totalProteinasExcesos += parseFloat(proteinasInput.value) || 0;
+  });
+
+  // Totales finales
+  const totalCalorias = totalCaloriasComidas + totalCaloriasExcesos;
+  const totalProteinas = totalProteinasComidas + totalProteinasExcesos;
+
+  // Porcentajes de objetivos
+  const porcentajeCalorias = config.objetivos.calorias ? (totalCalorias / config.objetivos.calorias * 100).toFixed(1) : 0;
+  const porcentajeProteinas = config.objetivos.proteinas ? (totalProteinas / config.objetivos.proteinas * 100).toFixed(1) : 0;
+
+  // Actualizar el HTML
+  resumenDiv.innerHTML = `
+    <div class="text-center">
+      <div class="text-2xl font-bold text-orange-600">${totalCalorias}</div>
+      <div class="text-xs text-gray-500">kcal totales</div>
+      <div class="text-xs text-gray-600 mt-1">
+        Comidas: ${totalCaloriasComidas} | Excesos: ${totalCaloriasExcesos}
+      </div>
+      ${config.objetivos.calorias ? `
+        <div class="mt-2 text-xs ${porcentajeCalorias > 110 ? 'text-red-600' : porcentajeCalorias < 90 ? 'text-yellow-600' : 'text-green-600'}">
+          ${porcentajeCalorias}% del objetivo
+        </div>
+      ` : ''}
+    </div>
+
+    <div class="text-center">
+      <div class="text-2xl font-bold text-red-600">${totalProteinas}</div>
+      <div class="text-xs text-gray-500">g proteínas</div>
+      <div class="text-xs text-gray-600 mt-1">
+        Comidas: ${totalProteinasComidas}g | Excesos: ${totalProteinasExcesos}g
+      </div>
+      ${config.objetivos.proteinas ? `
+        <div class="mt-2 text-xs ${porcentajeProteinas > 110 ? 'text-red-600' : porcentajeProteinas < 90 ? 'text-yellow-600' : 'text-green-600'}">
+          ${porcentajeProteinas}% del objetivo
+        </div>
+      ` : ''}
+  `;
+}
+
 // ============= UI FUNCTIONS =============
 function updateIntensidadDisplay(value) {
   const display = document.getElementById('intensidadValue');
@@ -2035,23 +2319,147 @@ function toggleDescansoActivoDetails(checked) {
 // ============= EXCESOS FUNCTIONS =============
 function toggleExcesoInputs(excesoKey, isChecked) {
   const inputsDiv = document.getElementById(`exceso_inputs_${excesoKey}`);
-  const chevronIcon = document.querySelector(`input[onchange*="${excesoKey}"]`).closest('label').querySelector('i');
+  const chevronIcon = document.querySelector(`input[onchange*="${excesoKey}"]`)?.closest('label')?.querySelector('i');
 
   if (isChecked) {
     inputsDiv.classList.remove('hidden');
     if (chevronIcon) {
       chevronIcon.className = 'fas fa-chevron-down text-red-500';
     }
+
+    // Añadir event listeners para actualizar resumen en tiempo real
+    const caloriasInput = document.getElementById(`exceso_calorias_${excesoKey}`);
+    const proteinasInput = document.getElementById(`exceso_proteinas_${excesoKey}`);
+
+    if (caloriasInput) {
+      caloriasInput.removeEventListener('input', actualizarResumenNutricional);
+      caloriasInput.removeEventListener('change', actualizarResumenNutricional);
+      caloriasInput.addEventListener('input', actualizarResumenNutricional);
+      caloriasInput.addEventListener('change', actualizarResumenNutricional);
+    }
+
+    if (proteinasInput) {
+      proteinasInput.removeEventListener('input', actualizarResumenNutricional);
+      proteinasInput.removeEventListener('change', actualizarResumenNutricional);
+      proteinasInput.addEventListener('input', actualizarResumenNutricional);
+      proteinasInput.addEventListener('change', actualizarResumenNutricional);
+    }
+
+    // Actualizar resumen inmediatamente
+    actualizarResumenNutricional();
   } else {
     inputsDiv.classList.add('hidden');
     if (chevronIcon) {
       chevronIcon.remove();
     }
+
+    // Actualizar resumen al desmarcar
+    actualizarResumenNutricional();
+  }
+}
+
+// ============= HIDRATACIÓN FUNCTIONS =============
+function añadirHidratacion(cantidad, tipo = 'Agua') {
+  const hora = new Date().toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'});
+  añadirBebidaInterna(tipo, cantidad, hora);
+}
+
+function toggleHidratacionDetalle() {
+  const detalle = document.getElementById('hidratacionDetalle');
+  if (detalle) {
+    detalle.classList.toggle('hidden');
+
+    // Si se está mostrando el detalle, establecer valores por defecto
+    if (!detalle.classList.contains('hidden')) {
+      const horaBebida = document.getElementById('horaBebida');
+      if (horaBebida && !horaBebida.value) {
+        horaBebida.value = new Date().toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'});
+      }
+    }
+  }
+}
+
+function añadirHidratacionManual() {
+  const tipo = document.getElementById('tipoBebida').value;
+  const cantidad = parseInt(document.getElementById('cantidadBebida').value);
+  const hora = document.getElementById('horaBebida').value;
+
+  if (!cantidad || cantidad <= 0) {
+    window.showToast('Por favor, introduce una cantidad válida', 'error');
+    return;
+  }
+
+  añadirBebidaInterna(tipo, cantidad, hora);
+
+  // Limpiar campos
+  document.getElementById('cantidadBebida').value = '';
+  document.getElementById('horaBebida').value = new Date().toLocaleTimeString('es-ES', {hour: '2-digit', minute:'2-digit'});
+}
+
+function añadirBebidaInterna(tipo, cantidad, hora) {
+  if (!currentRegistro.hidratacion) {
+    currentRegistro.hidratacion = { total: 0, bebidas: [] };
+  }
+
+  const bebida = { tipo, cantidad, hora };
+  currentRegistro.hidratacion.bebidas.push(bebida);
+  currentRegistro.hidratacion.total += cantidad;
+
+  // Debug: mostrar datos después de añadir
+  console.log('Después de añadir bebida:', {
+    bebida,
+    totalBebidas: currentRegistro.hidratacion.bebidas.length,
+    bebidas: currentRegistro.hidratacion.bebidas,
+    total: currentRegistro.hidratacion.total
+  });
+
+  // Guardar inmediatamente el cambio en localStorage
+  Storage.saveRegistro(currentRegistro);
+
+  // Re-renderizar sección de hidratación
+  actualizarSeccionHidratacion();
+
+  window.showToast(`Añadido: ${cantidad}ml de ${tipo}`, 'success');
+}
+
+function eliminarBebida(index) {
+  if (currentRegistro.hidratacion && currentRegistro.hidratacion.bebidas[index]) {
+    const bebida = currentRegistro.hidratacion.bebidas[index];
+    currentRegistro.hidratacion.total -= bebida.cantidad;
+    currentRegistro.hidratacion.bebidas.splice(index, 1);
+
+    // Guardar inmediatamente el cambio en localStorage
+    Storage.saveRegistro(currentRegistro);
+
+    actualizarSeccionHidratacion();
+    window.showToast(`Eliminado: ${bebida.cantidad}ml de ${bebida.tipo}`, 'info');
+  }
+}
+
+function actualizarSeccionHidratacion() {
+  const container = document.querySelector('.bg-gradient-to-r.from-blue-50.to-cyan-50');
+  if (container) {
+    const config = Storage.getConfig();
+    // Recordar si el detalle estaba expandido
+    const detalleExpandido = document.getElementById('hidratacionDetalle') &&
+                            !document.getElementById('hidratacionDetalle').classList.contains('hidden');
+
+    // Debug: verificar estado del currentRegistro antes del render
+    console.log('actualizarSeccionHidratacion - currentRegistro.hidratacion:', currentRegistro.hidratacion);
+
+    container.outerHTML = renderSeccionHidratacion(currentRegistro, config);
+
+    // Restaurar estado del detalle si estaba expandido
+    if (detalleExpandido) {
+      const nuevoDetalle = document.getElementById('hidratacionDetalle');
+      if (nuevoDetalle) {
+        nuevoDetalle.classList.remove('hidden');
+      }
+    }
   }
 }
 
 // Export functions to global scope
-window.toggleMode = toggleMode;
 window.toggleEntrenamientoDetails = toggleEntrenamientoDetails;
 window.toggleDescansoActivoDetails = toggleDescansoActivoDetails;
 window.togglePersonalData = togglePersonalData;
@@ -2069,3 +2477,7 @@ window.eliminarDescansoActivo = eliminarDescansoActivo;
 window.updateMacroTotals = updateMacroTotals;
 window.getRegistroAnterior = getRegistroAnterior;
 window.saveRegistro = saveRegistro;
+window.añadirHidratacion = añadirHidratacion;
+window.toggleHidratacionDetalle = toggleHidratacionDetalle;
+window.añadirHidratacionManual = añadirHidratacionManual;
+window.eliminarBebida = eliminarBebida;

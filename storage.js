@@ -21,18 +21,20 @@ function getConfig() {
       calorias: 1800,
       proteinas: 145,
       peso_objetivo: null,
-      perimetro_objetivo: null
+      perimetro_objetivo: null,
+      hidratacion: 2500 // mililitros por día
     },
     preferencias: {
       campos_obligatorios: ['calorias', 'proteinas'],
       mostrar_detalles_comida: true,
       recordar_suplementos: true,
-      columnas_visibles: ['fecha', 'calorias', 'proteinas', 'entreno', 'alcohol', 'sueno', 'peso', 'acciones']
+      columnas_visibles: ['fecha', 'calorias', 'proteinas', 'entreno', 'hidratacion', 'sueno', 'peso', 'acciones']
     },
     suplementos_habituales: ['Proteína', 'Magnesio', 'Vitamina D', 'Omega-3'],
     consumos_negativos: ['Alcohol', 'Dulces', 'Snacks procesados', 'Refrescos'],
     tipos_comida: ['Desayuno', 'Comida', 'Merienda', 'Cena', 'Extra'],
-    tipos_ejercicio: ['Fuerza', 'Cardio', 'HIIT', 'Yoga', 'Natación', 'Ciclismo', 'Running', 'Movilidad', 'Otro']
+    tipos_ejercicio: ['Fuerza', 'Cardio', 'HIIT', 'Yoga', 'Natación', 'Ciclismo', 'Running', 'Movilidad', 'Otro'],
+    tipos_bebida: ['Agua', 'Té/Infusiones', 'Café', 'Bebidas deportivas', 'Zumos naturales', 'Otros']
   };
   
   const stored = localStorage.getItem(STORAGE_KEYS.CONFIG);
@@ -116,11 +118,16 @@ function createEmptyRegistro(fecha = null) {
       }
     },
     
+    hidratacion: {
+      total: 0, // mililitros
+      bebidas: [] // Array de {tipo, cantidad, hora}
+    },
+
     sueno: {
       horas: null,
       calidad: 'buena'
     },
-    
+
     sentimiento: {
       energia: 3,
       animo: 3,

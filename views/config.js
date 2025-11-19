@@ -65,7 +65,7 @@ window.renderConfig = function() {
           </h2>
 
           <form id="formObjetivos" class="space-y-6">
-            <div class="grid md:grid-cols-2 gap-6">
+            <div class="grid md:grid-cols-3 gap-6">
 
               <div>
                 <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -97,6 +97,25 @@ window.renderConfig = function() {
                   <span class="absolute right-4 top-3.5 text-gray-400 font-medium">g</span>
                 </div>
                 <p class="text-xs text-gray-500 mt-1">Tu objetivo diario de proteínas</p>
+              </div>
+
+              <div>
+                <label class="block text-sm font-semibold text-gray-700 mb-2">
+                  <i class="fas fa-tint text-blue-500 mr-1"></i>
+                  Hidratación diaria objetivo
+                </label>
+                <div class="relative">
+                  <input type="number"
+                         name="hidratacion"
+                         value="${config.objetivos.hidratacion}"
+                         class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:border-blue-500 text-lg font-semibold"
+                         min="1000"
+                         max="8000"
+                         step="250"
+                         required>
+                  <span class="absolute right-4 top-3.5 text-gray-400 font-medium">ml</span>
+                </div>
+                <p class="text-xs text-gray-500 mt-1">Tu objetivo diario de líquidos (${(config.objetivos.hidratacion / 1000).toFixed(1)}L)</p>
               </div>
 
             </div>
@@ -371,6 +390,38 @@ window.renderConfig = function() {
               </div>
             </div>
 
+            <!-- Tipos de bebida -->
+            <div class="bg-cyan-50 border border-cyan-200 rounded-xl p-6">
+              <h3 class="font-bold text-gray-900 mb-4 flex items-center gap-2">
+                <i class="fas fa-tint text-cyan-600"></i>
+                Tipos de bebida
+              </h3>
+              <div id="listTiposBebida" class="space-y-2 mb-4">
+                ${config.tipos_bebida.map((tipo, idx) => `
+                  <div class="flex items-center gap-2 p-2 bg-white rounded-lg cursor-move sortable-item"
+                       draggable="true"
+                       data-list="tipos_bebida"
+                       data-index="${idx}"
+                       ondragstart="handleDragStart(event)"
+                       ondragover="handleDragOver(event)"
+                       ondrop="handleDrop(event)"
+                       ondragend="handleDragEnd(event)">
+                    <i class="fas fa-grip-vertical text-gray-400 mr-2"></i>
+                    <span class="flex-1 text-sm font-medium">${tipo}</span>
+                    <button onclick="eliminarTipoBebida(${idx})" class="text-red-600 hover:text-red-800 px-2">
+                      <i class="fas fa-trash text-sm"></i>
+                    </button>
+                  </div>
+                `).join('')}
+              </div>
+              <div class="flex gap-2">
+                <input type="text" id="nuevoTipoBebida" placeholder="Nuevo tipo de bebida..." class="flex-1 px-3 py-2 border rounded-lg text-sm">
+                <button onclick="agregarTipoBebida()" class="px-4 py-2 bg-cyan-600 text-white rounded-lg hover:bg-cyan-700 text-sm">
+                  <i class="fas fa-plus mr-1"></i>Añadir
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
 
@@ -495,6 +546,7 @@ function setupConfigListeners() {
     const config = Storage.getConfig();
     config.objetivos.calorias = parseInt(formData.get('calorias'));
     config.objetivos.proteinas = parseInt(formData.get('proteinas'));
+    config.objetivos.hidratacion = parseInt(formData.get('hidratacion'));
 
     Storage.saveConfig(config);
     showToast('✓ Objetivos actualizados', 'success');
@@ -659,6 +711,38 @@ function eliminarTipoEjercicio(idx) {
   showToast(`✓ "${eliminado}" eliminado`, 'success');
 }
 
+function agregarTipoBebida() {
+  const input = document.getElementById('nuevoTipoBebida');
+  const valor = input.value.trim();
+
+  if (!valor) return;
+
+  const config = Storage.getConfig();
+  if (!config.tipos_bebida.includes(valor)) {
+    config.tipos_bebida.push(valor);
+    Storage.saveConfig(config);
+    input.value = '';
+    renderConfig();
+    showToast('✓ Tipo de bebida añadido', 'success');
+  } else {
+    showToast('✗ Ya existe ese tipo de bebida', 'error');
+  }
+}
+
+function eliminarTipoBebida(idx) {
+  const config = Storage.getConfig();
+
+  if (config.tipos_bebida.length <= 1) {
+    showToast('✗ Debe haber al menos un tipo de bebida', 'error');
+    return;
+  }
+
+  const eliminado = config.tipos_bebida.splice(idx, 1)[0];
+  Storage.saveConfig(config);
+  renderConfig();
+  showToast(`✓ "${eliminado}" eliminado`, 'success');
+}
+
 async function handleImportConfig(input) {
   const file = input.files[0];
   if (!file) return;
@@ -737,6 +821,8 @@ window.agregarTipoComida = agregarTipoComida;
 window.eliminarTipoComida = eliminarTipoComida;
 window.agregarTipoEjercicio = agregarTipoEjercicio;
 window.eliminarTipoEjercicio = eliminarTipoEjercicio;
+window.agregarTipoBebida = agregarTipoBebida;
+window.eliminarTipoBebida = eliminarTipoBebida;
 window.handleImportConfig = handleImportConfig;
 window.handleDragStart = handleDragStart;
 window.handleDragOver = handleDragOver;

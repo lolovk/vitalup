@@ -197,6 +197,7 @@ function getAvailableColumns() {
     { id: 'fecha', nombre: 'Fecha' },
     { id: 'calorias', nombre: 'Calorías' },
     { id: 'proteinas', nombre: 'Proteínas' },
+    { id: 'hidratacion', nombre: 'Hidratación' },
     { id: 'entreno', nombre: 'Entrenamiento' },
     { id: 'consumos', nombre: 'Consumos negativos' },
     { id: 'sueno', nombre: 'Sueño' },
@@ -276,7 +277,29 @@ function renderTablaBody(registros, config) {
         </td>
       `;
     }
-    
+
+    // Hidratación
+    if (visibles.includes('hidratacion')) {
+      const hidratacionTotal = r.hidratacion ? r.hidratacion.total || 0 : 0;
+      const objetivoHidratacion = config.objetivos.hidratacion || 2500;
+      const porcentajeHidratacion = Math.round((hidratacionTotal / objetivoHidratacion) * 100);
+      const cumpleHidratacion = porcentajeHidratacion >= 90;
+
+      html += `
+        <td class="px-4 py-3 text-center">
+          ${hidratacionTotal > 0 ? `
+            <div class="flex flex-col items-center">
+              <span class="font-semibold ${cumpleHidratacion ? 'text-blue-600' : 'text-gray-900'}">
+                ${(hidratacionTotal / 1000).toFixed(1)}L
+              </span>
+              <span class="text-xs text-gray-500">${porcentajeHidratacion}%</span>
+              ${cumpleHidratacion ? '<i class="fas fa-check text-blue-500 text-xs"></i>' : ''}
+            </div>
+          ` : '<span class="text-gray-400">—</span>'}
+        </td>
+      `;
+    }
+
     // Entrenamiento
     if (visibles.includes('entreno')) {
       html += `
@@ -346,16 +369,19 @@ function renderTablaBody(registros, config) {
     if (visibles.includes('animo')) {
       html += `
         <td class="px-4 py-3 text-center">
-          <span class="text-2xl">${['😔','😐','🙂','😀'][r.sentimiento.animo - 1] || '😐'}</span>
+          <span class="text-2xl">${['😢','😔','😐','🙂','😄'][r.sentimiento.animo - 1] || '😐'}</span>
         </td>
       `;
     }
     
     // Energía
     if (visibles.includes('energia')) {
+      const batteryIcons = ['fa-battery-empty', 'fa-battery-quarter', 'fa-battery-half', 'fa-battery-three-quarters', 'fa-battery-full'];
+      const batteryColors = ['text-red-500', 'text-orange-500', 'text-yellow-500', 'text-lime-500', 'text-green-500'];
+      const energiaIndex = (r.sentimiento.energia || 3) - 1;
       html += `
         <td class="px-4 py-3 text-center">
-          <span class="text-2xl">${['😩','😐','🙂','💪'][r.sentimiento.energia - 1] || '😐'}</span>
+          <i class="fas ${batteryIcons[energiaIndex]} text-2xl ${batteryColors[energiaIndex]}"></i>
         </td>
       `;
     }
