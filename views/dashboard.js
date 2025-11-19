@@ -4,6 +4,22 @@
  * VERSIÓN 2.0 compatible con nueva estructura
  *********************************************/
 
+// Función auxiliar para calcular totales incluyendo excesos
+function calcularTotalesConExcesos(registro) {
+  let totalCalorias = registro.nutricion.calorias || 0;
+  let totalProteinas = registro.nutricion.proteinas || 0;
+
+  // Sumar excesos si existen
+  if (registro.nutricion.excesos_data) {
+    Object.values(registro.nutricion.excesos_data).forEach(exceso => {
+      totalCalorias += exceso.calorias || 0;
+      totalProteinas += exceso.proteinas || 0;
+    });
+  }
+
+  return { calorias: totalCalorias, proteinas: totalProteinas };
+}
+
 window.renderDashboard = function() {
   const app = document.getElementById('app');
   const config = Storage.getConfig();
@@ -88,13 +104,16 @@ function renderRegistroHoy(registro, stats, config) {
       </div>
     `;
   }
-  
+
+  // Calcular totales con excesos
+  const totales = calcularTotalesConExcesos(registro);
+
   // Calcular progreso
-  const progresoCalorias = registro.nutricion.calorias 
-    ? (registro.nutricion.calorias / config.objetivos.calorias * 100).toFixed(0)
+  const progresoCalorias = totales.calorias
+    ? (totales.calorias / config.objetivos.calorias * 100).toFixed(0)
     : 0;
-  const progresoProteinas = registro.nutricion.proteinas 
-    ? (registro.nutricion.proteinas / config.objetivos.proteinas * 100).toFixed(0)
+  const progresoProteinas = totales.proteinas
+    ? (totales.proteinas / config.objetivos.proteinas * 100).toFixed(0)
     : 0;
   
   const caloriasStatus = progresoCalorias >= 95 && progresoCalorias <= 105 ? 'success' : 
@@ -138,7 +157,7 @@ function renderRegistroHoy(registro, stats, config) {
                 caloriasStatus === 'success' ? 'text-green-600' :
                 caloriasStatus === 'warning' ? 'text-yellow-600' : 'text-red-600'
               }">
-                ${registro.nutricion.calorias || 0}
+                ${totales.calorias}
               </span>
             </div>
             <div class="relative h-3 bg-gray-200 rounded-full overflow-hidden">
@@ -164,7 +183,7 @@ function renderRegistroHoy(registro, stats, config) {
                 proteinasStatus === 'success' ? 'text-green-600' :
                 proteinasStatus === 'warning' ? 'text-yellow-600' : 'text-red-600'
               }">
-                ${registro.nutricion.proteinas || 0}g
+                ${totales.proteinas}g
               </span>
             </div>
             <div class="relative h-3 bg-gray-200 rounded-full overflow-hidden">
@@ -255,11 +274,17 @@ function renderProgresoSemanal(ultimos7, config) {
   
   const promedioCalorias = ultimos7
     .filter(r => r.nutricion.calorias !== null)
-    .reduce((sum, r) => sum + r.nutricion.calorias, 0) / (ultimos7.length || 1);
-  
+    .reduce((sum, r) => {
+      const totales = calcularTotalesConExcesos(r);
+      return sum + totales.calorias;
+    }, 0) / (ultimos7.length || 1);
+
   const promedioProteinas = ultimos7
     .filter(r => r.nutricion.proteinas !== null)
-    .reduce((sum, r) => sum + r.nutricion.proteinas, 0) / (ultimos7.length || 1);
+    .reduce((sum, r) => {
+      const totales = calcularTotalesConExcesos(r);
+      return sum + totales.proteinas;
+    }, 0) / (ultimos7.length || 1);
   
   return `
     <div class="bg-white rounded-2xl shadow-lg p-6">

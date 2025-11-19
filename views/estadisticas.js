@@ -152,7 +152,10 @@ function renderResumen(data, config) {
   ).length;
   
   const diasEntrenamiento = data.filter(r => r.entrenamiento.hecho).length;
-  const diasSinAlcohol = data.filter(r => !r.nutricion.alcohol).length;
+  const diasSinAlcohol = data.filter(r =>
+    !r.nutricion.consumos_negativos ||
+    !r.nutricion.consumos_negativos.includes('Alcohol')
+  ).length;
   
   const promedioCalorias = data
     .filter(r => r.nutricion.calorias !== null)

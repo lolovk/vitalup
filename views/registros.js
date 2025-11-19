@@ -4,6 +4,22 @@
  * VERSIÓN 2.0 con columnas personalizables
  *********************************************/
 
+// Función auxiliar para calcular totales incluyendo excesos
+function calcularTotalesConExcesos(registro) {
+  let totalCalorias = registro.nutricion.calorias || 0;
+  let totalProteinas = registro.nutricion.proteinas || 0;
+
+  // Sumar excesos si existen
+  if (registro.nutricion.excesos_data) {
+    Object.values(registro.nutricion.excesos_data).forEach(exceso => {
+      totalCalorias += exceso.calorias || 0;
+      totalProteinas += exceso.proteinas || 0;
+    });
+  }
+
+  return { calorias: totalCalorias, proteinas: totalProteinas };
+}
+
 window.renderRegistros = function() {
   const app = document.getElementById('app');
   const registros = Storage.getRegistros().sort((a, b) => b.fecha.localeCompare(a.fecha));
@@ -73,24 +89,7 @@ window.renderRegistros = function() {
           </label>
         </div>
       </div>
-      
-      <!-- Selector de columnas (oculto por defecto) -->
-      <div id="columnSelector" class="hidden bg-white rounded-xl shadow p-4">
-        <h3 class="font-bold text-gray-900 mb-3">Seleccionar columnas visibles</h3>
-        <div class="grid grid-cols-2 md:grid-cols-4 gap-2">
-          ${getAvailableColumns().map(col => `
-            <label class="flex items-center gap-2 p-2 border rounded-lg cursor-pointer hover:bg-gray-50">
-              <input type="checkbox" 
-                     value="${col.id}"
-                     ${config.preferencias.columnas_visibles.includes(col.id) ? 'checked' : ''}
-                     onchange="toggleColumn(this)"
-                     class="w-4 h-4 text-blue-600 rounded">
-              <span class="text-sm">${col.nombre}</span>
-            </label>
-          `).join('')}
-        </div>
-      </div>
-      
+
       <!-- Filtros -->
       <div class="bg-white rounded-xl shadow p-4">
         <div class="space-y-4">
@@ -228,10 +227,13 @@ function renderTablaBody(registros, config) {
   const visibles = config.preferencias.columnas_visibles;
   
   return registros.map(r => {
-    const cumpleCalorias = r.nutricion.calorias && 
-                          Math.abs(r.nutricion.calorias - config.objetivos.calorias) <= config.objetivos.calorias * 0.1;
-    const cumpleProteinas = r.nutricion.proteinas && 
-                           r.nutricion.proteinas >= config.objetivos.proteinas * 0.9;
+    // Calcular totales con excesos
+    const totales = calcularTotalesConExcesos(r);
+
+    const cumpleCalorias = totales.calorias &&
+                          Math.abs(totales.calorias - config.objetivos.calorias) <= config.objetivos.calorias * 0.1;
+    const cumpleProteinas = totales.proteinas &&
+                           totales.proteinas >= config.objetivos.proteinas * 0.9;
     
     const tieneConsumosNegativos = r.nutricion.consumos_negativos && 
                                     r.nutricion.consumos_negativos.length > 0;
@@ -254,9 +256,9 @@ function renderTablaBody(registros, config) {
     if (visibles.includes('calorias')) {
       html += `
         <td class="px-4 py-3 text-center">
-          ${r.nutricion.calorias !== null ? `
+          ${totales.calorias ? `
             <span class="font-semibold ${cumpleCalorias ? 'text-green-600' : 'text-gray-900'}">
-              ${r.nutricion.calorias}
+              ${totales.calorias}
             </span>
             ${cumpleCalorias ? '<i class="fas fa-check text-green-500 ml-1 text-xs"></i>' : ''}
           ` : '<span class="text-gray-400">—</span>'}
@@ -268,9 +270,9 @@ function renderTablaBody(registros, config) {
     if (visibles.includes('proteinas')) {
       html += `
         <td class="px-4 py-3 text-center">
-          ${r.nutricion.proteinas !== null ? `
+          ${totales.proteinas ? `
             <span class="font-semibold ${cumpleProteinas ? 'text-green-600' : 'text-gray-900'}">
-              ${r.nutricion.proteinas}g
+              ${totales.proteinas}g
             </span>
             ${cumpleProteinas ? '<i class="fas fa-check text-green-500 ml-1 text-xs"></i>' : ''}
           ` : '<span class="text-gray-400">—</span>'}
